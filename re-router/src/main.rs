@@ -132,12 +132,13 @@ fn main() {
             controller.clear();
             delay(150);
             let map = map.lock().unwrap();
+
             for indicator in &route_indicators {
                 let curr_road = indicator.road_id;
                 let n1 = indicator.int_id;
 
                 for (n2, leds) in &indicator.routes {
-                    let (_cost, maybe_road) = map.best_direction(n1, *n2, Some(&curr_road));
+                    let (cost, maybe_road) = map.best_direction(n1, *n2, Some(&curr_road));
                     if let Some(road) = maybe_road {
                         // println!(
                         //     "{}->{}({}) costs {} via {:?}",
@@ -256,8 +257,9 @@ fn main() {
                 for (LaneId(road_id, lane_id), _lane) in &tracker.lanes {
                     let road_len = map.road_length(road_id).unwrap();
                     let cost = tracker
-                        .lane_dynamic_cost(&LaneId(*road_id, *lane_id), road_len, 500.0, 0.0, 0.0)
+                        .lane_dynamic_cost(&LaneId(*road_id, *lane_id), road_len, 500.0, 50.0, 0.0)
                         .unwrap();
+
                     if *lane_id == 0 {
                         map.set_cost(road_id, Some(cost), None);
                     } else {

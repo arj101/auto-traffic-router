@@ -106,7 +106,7 @@ impl Road {
 impl Intersection {}
 
 pub struct RoadMap {
-    roads: HashMap<RoadId, Road>,
+    pub roads: HashMap<RoadId, Road>,
     intersections: HashMap<IntersectionId, Intersection>,
 }
 

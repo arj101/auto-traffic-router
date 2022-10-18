@@ -24,6 +24,7 @@ pub struct Vehicle {
     vel_n: f64,
     last_detect: Instant,
     first_detect: Instant,
+    update_count: usize,
     pub lane_id: LaneId,
 }
 
@@ -39,13 +40,14 @@ impl Vehicle {
             avg_vel: vel,
             vel_n: 1.0,
             vel_sum: vel,
+            update_count: 0,
         }
     }
 
     pub fn update(&mut self, pos: (f64, f64), vel: f64, lane_id: LaneId) {
         self.pos = pos;
         self.vel = vel;
-        if self.vel_n >= 29.0 {
+        if self.vel_n >= 5.0 {
             self.vel_n = 0.0;
             self.vel_sum = 0.0;
         }
@@ -54,6 +56,7 @@ impl Vehicle {
         self.avg_vel = self.vel_sum / self.vel_n;
         self.last_detect = Instant::now();
         self.lane_id = lane_id;
+        self.update_count += 1;
     }
 
     pub fn time_till_last_detect(&self) -> Duration {
@@ -61,7 +64,7 @@ impl Vehicle {
     }
 }
 
-const THRESH_TIME: u128 = 1000;
+const THRESH_TIME: u128 = 1300;
 
 pub struct Tracker {
     pub lanes: HashMap<LaneId, HashSet<VehicleId>>,
@@ -109,22 +112,29 @@ impl Tracker {
         let lane_len = lane.len() as f64;
 
         let density_term = density_coeff * lane_len / lane_length;
-        let avg_vel: f64 = lane
-            .iter()
-            .map(|id| {
-                if let Some(v) = self.vehicles.get(id) {
-                    v.avg_vel
-                } else {
-                    0.0
+        let mut vel_n = 0;
+        let mut avg_vel = 0.0;
+        for id in lane {
+            if let Some(v) = self.vehicles.get(id) {
+                if v.update_count > 50 && v.first_detect.elapsed().as_millis() > THRESH_TIME * 5 {
+                    avg_vel += v.avg_vel;
+                    vel_n += 1;
                 }
-            })
-            .sum();
-        let avg_vel = if lane_len > 0.1 {
-            avg_vel / lane_len
+            }
+        }
+
+        let avg_vel = if vel_n > 0 {
+            avg_vel / vel_n as f64
         } else {
             0.0
         };
+
         let inv_velocity_term = density_term * vel_coeff * 1.0 / (10e-2 + avg_vel);
+        let inv_velocity_term = if avg_vel > 0.0 {
+            inv_velocity_term
+        } else {
+            0.0
+        };
         let clearance_term = density_term * clearance_coeff * 0.0;
 
         let cost = density_term + inv_velocity_term + clearance_term;

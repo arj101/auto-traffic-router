@@ -61,7 +61,7 @@ cv2.createTrackbar('val upper', 'tracker', 255, 255, nothing)
 # tracker = object_tracker.ObjectTracker(10, 0.05)
 data = {'e': ((100, 100), 3, 0, 0)}
 buffer = {}
-thresh_dist = 15
+thresh_dist = 20
 thresh_time = 1.0
 counter = 0
 
@@ -125,8 +125,8 @@ while True:
 
                     max_d = math.dist(
                         [0, 0],
-                        [(thresh_dist + vel) * math.cos(angle),
-                         (thresh_dist + vel) * math.sin(angle)]
+                        [(thresh_dist + vel*2) * math.cos(angle),
+                         (thresh_dist + vel*2) * math.sin(angle)]
                     )
 
                     if d <= constrain(max_d, thresh_dist, 100):
