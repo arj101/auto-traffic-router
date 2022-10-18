@@ -24,7 +24,7 @@ pub struct Vehicle {
     vel_n: f64,
     last_detect: Instant,
     first_detect: Instant,
-    lane_id: LaneId,
+    pub lane_id: LaneId,
 }
 
 impl Vehicle {
@@ -61,7 +61,7 @@ impl Vehicle {
     }
 }
 
-const THRESH_TIME: u128 = 3000;
+const THRESH_TIME: u128 = 1000;
 
 pub struct Tracker {
     pub lanes: HashMap<LaneId, HashSet<VehicleId>>,

@@ -39,8 +39,6 @@ struct RxDatas(Vec<RxData>);
 
 fn main() {
     // load_road_masks();
-    let mut controller =
-        LightController::create_and_init(&std::env::var("PORT").expect("Serial port name"), 115200);
     // controller.set_led(Led::E_RD_1_4, true);
 
     let (tx, rx) = std::sync::mpsc::channel();
@@ -121,6 +119,11 @@ fn main() {
 
     let map_clone = Arc::clone(&map);
     let controller_thread = std::thread::spawn(move || {
+        let mut controller = LightController::create_and_init(
+            &std::env::var("PORT").expect("Serial port name"),
+            115200,
+        );
+
         let map = map_clone;
         let route_indicators = route_indicator::create_route_indicators();
         let mut last_update = Instant::now();
@@ -172,36 +175,80 @@ fn main() {
     // println!("{}", video_subsys.gl_attr().context_major_version());
 
     let window = video_subsys
-        .window("Traffic simulator", 800, 600)
+        .window("Automatic traffic router (traffic map)", 640, 480)
         .position_centered()
         .build()
         .unwrap();
+    let ttf_context = sdl2::ttf::init()
+        .map_err(|e| e.to_string())
+        .expect("ttf context ( some font thing )");
 
     let mut canvas = window.into_canvas().build().unwrap();
+    let mut font = ttf_context
+        .load_font("../fonts/FiraCode-Medium.ttf", 14)
+        .expect("font");
     let texture_creator = canvas.texture_creator();
-    let texture = texture_creator.load_texture("../map.png").unwrap();
+    let texture = texture_creator.load_texture("../map-outline.png").unwrap();
 
     let mut event_pump = ctx.event_pump().unwrap();
-    let mut last_light_update = Instant::now();
     'running: loop {
-        canvas.set_draw_color(Color::BLACK);
+        canvas.set_draw_color(Color::RGBA(20, 20, 20, 200));
         canvas.clear();
-        canvas.copy(&texture, None, Some(Rect::new(0, 0, 640, 480)));
+        canvas
+            .copy(&texture, None, Some(Rect::new(0, 0, 640, 480)))
+            .expect("rendered map outline");
         canvas.set_draw_color(Color::MAGENTA);
         if let Ok(d) = rx.recv() {
             for d in d.0 {
-                canvas.fill_rect(Rect::new(d.x as i32, d.y as i32, 8, 8));
+                // canvas.fill_rect(Rect::new(d.x as i32, d.y as i32, 8, 8));
                 tracker.on_recv(d)
             }
 
             canvas.set_draw_color(Color::CYAN);
             for (_, vehicle) in &tracker.vehicles {
-                canvas.fill_rect(Rect::new(
+                let _ = canvas.fill_rect(Rect::new(
                     vehicle.pos.0 as i32 - 5,
                     vehicle.pos.1 as i32 - 5,
                     10,
                     10,
                 ));
+
+                let lane = vehicle.lane_id;
+                let n1_id = lane.0 .0;
+                let n2_id = lane.0 .1;
+                let lane_id = lane.1;
+
+                let srf = font
+                    .render(&format!(
+                        "{}-{} {}",
+                        if n1_id < 10 {
+                            format!("{}", n1_id)
+                        } else {
+                            format!("{}", n1_id as u8 as char)
+                        },
+                        if n2_id < 10 {
+                            format!("{}", n2_id)
+                        } else {
+                            format!("{}", n2_id as u8 as char)
+                        },
+                        if lane_id == 1 { "right" } else { "left" },
+                    ))
+                    .blended(Color::MAGENTA)
+                    .expect("rendered text");
+                let texture = texture_creator
+                    .create_texture_from_surface(srf)
+                    .expect("texture");
+                let TextureQuery { width, height, .. } = texture.query();
+                let _ = canvas.copy(
+                    &texture,
+                    None,
+                    Some(Rect::new(
+                        vehicle.pos.0 as i32 + 5,
+                        vehicle.pos.1 as i32 + 5,
+                        width,
+                        height,
+                    )),
+                );
             }
 
             {
@@ -218,20 +265,20 @@ fn main() {
                     }
                 }
             }
-
-            for event in event_pump.poll_iter() {
-                match event {
-                    Event::Quit { .. }
-                    | Event::KeyDown {
-                        keycode: Some(Keycode::Escape),
-                        ..
-                    } => break 'running,
-                    _ => {}
-                }
-            }
-
-            canvas.present();
         }
+
+        for event in event_pump.poll_iter() {
+            match event {
+                Event::Quit { .. }
+                | Event::KeyDown {
+                    keycode: Some(Keycode::Escape),
+                    ..
+                } => break 'running,
+                _ => {}
+            }
+        }
+
+        canvas.present();
         tracker.update();
     }
 

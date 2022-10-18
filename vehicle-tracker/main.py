@@ -30,6 +30,8 @@ def constrain(val, l, u):
 roadmask_l = cv2.cvtColor(cv2.imread(
     '/home/ge9x/science-fair-2022/road-masks/1-4-l.png'), cv2.COLOR_BGR2GRAY)
 
+map_outline = cv2.imread('../map-outline.png')
+
 
 kernel = np.array([
     [4, 4, 4, 4, 4],
@@ -45,6 +47,17 @@ if not cam.isOpened():
     print('cannot open camera')
     sys.exit()
 
+
+def nothing(x):
+    pass
+
+
+cv2.namedWindow('tracker')
+cv2.createTrackbar('sat lower', 'tracker', 182, 255, nothing)
+cv2.createTrackbar('val lower', 'tracker', 100, 255, nothing)
+cv2.createTrackbar('sat upper', 'tracker', 255, 255, nothing)
+cv2.createTrackbar('val upper', 'tracker', 255, 255, nothing)
+
 # tracker = object_tracker.ObjectTracker(10, 0.05)
 data = {'e': ((100, 100), 3, 0, 0)}
 buffer = {}
@@ -59,19 +72,22 @@ while True:
         continue
 
     blurred = cv2.GaussianBlur(frame, (7, 7), 0)
-    cv2.imshow('blurred', blurred)
     opened = cv2.morphologyEx(blurred, cv2.MORPH_CLOSE, kernel)
-    thresh_lower = np.array([lower_h, lower_s, lower_v])
-    thresh_upper = np.array([upper_h, upper_s, upper_v])
     hsv = cv2.cvtColor(opened, cv2.COLOR_BGR2HSV)
-    mask1 = cv2.inRange(hsv, np.array([0, 70, 50]), np.array([10, 255, 255]))
+
+    lower_s = cv2.getTrackbarPos('sat lower', 'tracker')
+    lower_v = cv2.getTrackbarPos('val lower', 'tracker')
+    upper_s = cv2.getTrackbarPos('sat upper', 'tracker')
+    upper_v = cv2.getTrackbarPos('val upper', 'tracker')
+
+    mask1 = cv2.inRange(hsv, np.array(
+        [0, lower_s, lower_v]), np.array([10, upper_s, upper_v]))
     mask2 = cv2.inRange(hsv, np.array(
-        [170, 70, 50]), np.array([180, 255, 255]))
+        [170, lower_s, lower_v]), np.array([180, upper_s, upper_v]))
 
     thresh = mask1 | mask2
 
-    cv2.imshow('result', thresh)
-    cv2.imshow('processed', opened)
+    cv2.imshow('Color detection', thresh)
 
     contours, _ = cv2.findContours(
         thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -101,7 +117,6 @@ while True:
                 nearest_key = None
                 nearest_vel = None
                 nearest_angle = None
-                s = ''
                 for (key, ((x2, y2), t, vel, angle)) in data.items():
 
                     d = math.dist([float(cx), float(cy)],
@@ -130,7 +145,6 @@ while True:
                 else:
                     data[nearest_key] = (
                         (cx, cy), time.monotonic(), nearest_vel, nearest_angle)
-                print(s)
 
                 # cv2.drawContours(img, [box], 0, color, 3)
             # cv2.drawContours(img, [approx], 0, (255,0,255), 1)
@@ -160,11 +174,9 @@ while True:
     print(s)
     sys.stdout.flush()
 
-    cv2.imshow('img', img)
     # v = cv2.split(thresh)
-    cv2.imshow('masked', cv2.bitwise_and(thresh, thresh, mask=roadmask_l))
-    cv2.imshow('masked1', cv2.bitwise_or(
-        cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), roadmask_l))
+    cv2.imshow('tracker', cv2.bitwise_or(
+        frame, map_outline))
 
     if cv2.waitKey(1) == ord('q'):
         break
