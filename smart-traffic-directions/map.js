@@ -214,11 +214,13 @@ class Road {
 		if (nodeInitial == this.node1Id) {
 			let invDistSum = 0
 			let nClearance = 0
-			let timePerDistSum = 0
+			let avgVel = 0
+			let nVel = 0;
 			this.laneFwd.forEach((_, vid) => {
 				const v = sim.vehicles.get(vid)
-				if (v?.getPos(1)) {
-					timePerDistSum += ((deltaTime / 1000) / (10e-10 + Math.abs(v.pos - v.getPos(5) / 20))) ** 2
+				if (v?.getPos(5)) {
+					avgVel += (Math.abs((v.pos - v.getPos(5)) / 20)) / (deltaTime / 1000)
+					nVel += 1
 				}
 				if (v?.vehicleInfront) {
 					invDistSum += 1 / (10e-10 + Math.abs(v.pos - v.vehicleInfront.pos))
@@ -226,22 +228,26 @@ class Road {
 				}
 			})
 
-			// console.log(timePerDistSum)
+			if (nVel > 0) avgVel /= nVel
 
-			return (
-				densityCoeff * this.laneFwd.size / this.pathLength +
-				(this.laneFwd.size > 2 ? velCoeff * timePerDistSum : 0) +
-				densityCoeff * this.laneFwd.size / this.pathLength * clearanceCoeff * ((invDistSum != 0 && invDistSum != Infinity) ? invDistSum / nClearance : 0)
+			let cost = 0
+			cost +=
+				densityCoeff * this.laneFwd.size / this.pathLength
+			if (nVel > 0) cost += velCoeff * (1 / (10e-10 + avgVel))
+			cost += densityCoeff * this.laneFwd.size / this.pathLength * clearanceCoeff * ((invDistSum != 0 && invDistSum != Infinity) ? invDistSum / nClearance : 0)
+			return (cost
 			)
 		}
 		else {
 			let invDistSum = 0
 			let nClearance = 0
-			let timePerDistSum = 0
+			let avgVel = 0
+			let nVel = 0
 			this.laneBck.forEach((_, vid) => {
 				const v = sim.vehicles.get(vid)
-				if (v?.getPos(1)) {
-					timePerDistSum += ((deltaTime / 1000) / (10e-10 + Math.abs(v.pos - v.getPos(1) / 20))) ** 2
+				if (v?.getPos(5)) {
+					avgVel += (Math.abs((v.pos - v.getPos(5)) / 20)) / (deltaTime / 1000)
+					nVel += 1
 				}
 				if (v?.vehicleInfront) {
 					invDistSum += 1 / (10e-10 + Math.abs(v.pos - v.vehicleInfront.pos))
@@ -249,10 +255,16 @@ class Road {
 				}
 			})
 
+			if (avgVel > 0)
+				avgVel /= nVel
+
+			let cost = 0
+
+			cost += densityCoeff * this.laneBck.size / this.pathLength;
+			if (nVel > 0) cost += velCoeff * (1 / (10e-10 + avgVel))
+			densityCoeff * this.laneBck.size / this.pathLength * clearanceCoeff * ((invDistSum != 0 && invDistSum != Infinity) ? invDistSum / nClearance : 0)
 			return (
-				densityCoeff * this.laneBck.size / this.pathLength +
-				(this.laneBck.size > 2 ? velCoeff * timePerDistSum : 0) +
-				densityCoeff * this.laneBck.size / this.pathLength * clearanceCoeff * ((invDistSum != 0 && invDistSum != Infinity) ? invDistSum / nClearance : 0)
+				cost
 			)
 		}
 	}
@@ -360,7 +372,7 @@ class RoadMap {
 		if (node1Id == finalNodeId) return { cost: 0, road: null }
 
 		const node1 = this.intersections.get(node1Id)
-		if (node1.costs.has(finalNodeId) && node1.costs.get(finalNodeId).cost != Infinity) {
+		if (node1.costs.has(finalNodeId) && node1.costs.get(finalNodeId).cost != Infinity && node1.costs.get(finalNodeId).lastUpdate > new Date().valueOf() - updateInterval) {
 			return node1.costs.get(finalNodeId)
 		}
 
@@ -376,7 +388,7 @@ class RoadMap {
 				fastestDirection = road;
 			}
 		}
-		// node1.costs.set(finalNodeId, { cost: lowestCost, road: fastestDirection })
+		// node1.costs.set(finalNodeId, { cost: lowestCost, road: fastestDirection, lastUpdate: new Date().valueOf() })
 		// if (lowestCost < Infinity) console.log(`${lowestCost}  via ${fastestDirection?.node1Id}-${fastestDirection?.node2Id} from ${node1Id} to ${finalNodeId}`)
 		return { cost: lowestCost, road: fastestDirection }
 	}

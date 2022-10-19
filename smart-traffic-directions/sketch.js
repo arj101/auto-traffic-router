@@ -6,7 +6,7 @@ const editor = new MapEditor(map)
 let algorithm = 'f'
 let densityCoeff = 200
 let updateInterval = 500
-let clearanceCoeff = 2
+let clearanceCoeff = 0
 let velCoeff = 60
 function setup() {
 	createCanvas(640, 480);

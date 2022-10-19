@@ -107,7 +107,7 @@ class MapEditor {
             textSize(15)
             fill(255)
             noStroke()
-            // text(`${(edge.costFwd + edge.dCostFwd).toFixed(2)}, ${(edge.costBck + edge.dCostBck).toFixed(2)}`, edge.p1.x / 2 + edge.p2.x / 2, edge.p1.y / 2 + edge.p2.y / 2)
+            text(`${(edge.costFwd + edge.dCostFwd).toFixed(2)}, ${(edge.costBck + edge.dCostBck).toFixed(2)}`, edge.p1.x / 2 + edge.p2.x / 2, edge.p1.y / 2 + edge.p2.y / 2)
 
         }
 

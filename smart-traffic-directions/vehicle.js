@@ -22,7 +22,7 @@ class Vehicle {
         this.frameCount = 0;
 
         this.maxVel = 50 + Math.random() * 50
-        this.maxAcc = 5 + Math.random() * 15
+        this.maxAcc = 15 + Math.random() * 15
         this.dir = 0
         this.vel = 0
         this.idealClearance = 5 + Math.random() * 5;
@@ -61,22 +61,25 @@ class Vehicle {
                 return
             }
 
-            const distanceToInfront = this.dir * (this.vehicleInfront.getPos(10 / (deltaTime / 16)) - this.getPos(10 / (deltaTime / 16)))
-            desiredVel = this.maxVel * 0.5 * (distanceToInfront - this.idealClearance) / (this.idealClearance)
+            const distanceToInfront = this.dir * (this.vehicleInfront.getPos(30 / (deltaTime / 16)) - this.getPos(30 / (deltaTime / 16)))
+            desiredVel = this.maxVel * (distanceToInfront - this.idealClearance) / (this.idealClearance)
         }
         desiredVel = constrain(desiredVel, 0, this.maxVel)
 
         const dv = desiredVel - this.vel
         this.acc = Math.sign(dv) * this.maxAcc
-        // this.vel += scaling * (dv > 0 ? this.acc : (dv < 0 ? -dv : 0)) * deltaTime / 1000
-        this.vel = desiredVel
+        if (this.dir * dv < 0) {
+            this.acc = Math.sign(dv) * this.maxAcc * 4
+        }
+        this.vel += scaling * this.acc * deltaTime / 1000
+        // this.vel = desiredVel
 
         if (Math.random() < 0.01) this.vel /= (2.5 + Math.random() * 2)
-        if (Math.random() <= 0.0005 && this.pos / this.currRoad.pathLength > 0.2 && this.pos / this.currRoad.pathLength < 0.8) {
-            const actualMaxVel = this.maxVel
-            this.maxVel = 0
-            setTimeout(() => this.maxVel = 50 + Math.random() * 150, 5000 / scaling)
-        }
+        // if (Math.random() <= 0.0005 && this.pos / this.currRoad.pathLength > 0.2 && this.pos / this.currRoad.pathLength < 0.8) {
+        //     const actualMaxVel = this.maxVel
+        //     this.maxVel = 0
+        //     setTimeout(() => this.maxVel = 50 + Math.random() * 150, 5000 / scaling)
+        // }
 
         this.posHistory.push(this.pos)
         if (this.posHistory.length > 90) {
@@ -89,7 +92,7 @@ class Vehicle {
 
 
     enterRoad(roadId, nodeId, sim, roadMap) {
-        this.vel = 30
+        this.vel = this.maxVel
         this.currRoad = roadMap.roads.get(roadId)
         const { dir, pathSegment, infront, pos } = this.currRoad.enter(this.id, nodeId, sim)
         this.vehicleInfront = sim.vehicles.get(infront)
