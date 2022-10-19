@@ -57,7 +57,7 @@ class Vehicle {
                 // // this.vehicleBehind = this.sim.vehicles.get(this.vehicleInfront.id)
                 // this.vehicleInfront = tmpInfront
                 // this.move(scaling)
-                if (Math.random() < 0.8) this.pos = this.vehicleInfront.pos
+                if (Math.random() < 0.3) this.pos = this.vehicleInfront.pos
                 return
             }
 
@@ -69,7 +69,7 @@ class Vehicle {
         const dv = desiredVel - this.vel
         this.acc = Math.sign(dv) * this.maxAcc
         if (this.dir * dv < 0) {
-            this.acc = Math.sign(dv) * this.maxAcc * 4
+            this.acc = Math.sign(dv) * this.maxAcc * 5
         }
         this.vel += scaling * this.acc * deltaTime / 1000
         // this.vel = desiredVel

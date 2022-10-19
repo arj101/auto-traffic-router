@@ -10,7 +10,7 @@ class Simulator {
         this.vehicles = new Map()
         this.state = true
         this.speed = 0.3
-        this.spawnProbability = 0.3
+        this.spawnProbability = 0.8
         this.maxSpawnsPerFrame = 5
         this.count = 0
         this.travelTimeSum = 0
@@ -26,7 +26,7 @@ class Simulator {
         }
 
 
-        this.spawnVehicles(10, 'a', 'c')
+        // this.spawnVehicles(10, 'a', 'c')
 
 
     }
@@ -43,26 +43,29 @@ class Simulator {
         return this.roadMap.intersections.get(this.intersectionIds[Math.round(Math.random() * (this.intersectionIds.length - 1))])
     }
 
-    spawnVehicles(n = 5, s, t) {
-        for (let i = 0; i < n; i++) {
-            const startNode = this.pickNode()
-            let endNode = this.pickNode()
-            while (endNode.id == startNode.id) {
-                endNode = this.pickNode()
+    spawnVehicles(map, n = 5, s, t) {
+        for (const nodeID of this.majorIntersectionIds) {
+            for (let i = 0; i < n; i++) {
+                // const startNode = this.pickNode()
+                const startNodeId = nodeID
+                let endNode = this.pickNode()
+                while (endNode.id == startNodeId) {
+                    endNode = this.pickNode()
 
+                }
+                // const v = new Vehicle(this.count, this.roadMap, this, startNode.id, endNode.id)
+                const v = new Vehicle(this.count, map, this, s || startNodeId, t || endNode.id)
+                // v.enterRoad(road.id(), Math.random() > 0.5 ? road.node1Id : road.node2Id)
+                // console.log(`${startNode.id} to ${endNode.id}`)
+                this.vehicles.set(this.count, v)
+                this.count += 1
             }
-            // const v = new Vehicle(this.count, this.roadMap, this, startNode.id, endNode.id)
-            const v = new Vehicle(this.count, this.roadMap, this, s || startNode.id, t || endNode.id)
-            // v.enterRoad(road.id(), Math.random() > 0.5 ? road.node1Id : road.node2Id)
-            // console.log(`${startNode.id} to ${endNode.id}`)
-            this.vehicles.set(this.count, v)
-            this.count += 1
         }
     }
 
-    run(editor, map) {
+    run(editor, map, chart) {
         if (!this.state) return
-        if (Math.random() < this.spawnProbability && this.vehicles.size < 500) this.spawnVehicles(this.maxSpawnsPerFrame * Math.random())
+        if (Math.random() < this.spawnProbability && this.vehicles.size < 500) this.spawnVehicles(map, this.maxSpawnsPerFrame * Math.random())
         // this.spawnProbability *= 0.1 + Math.random() * 2
         const currT = new Date().valueOf()
         for (const [idx, vehicle] of this.vehicles) {
@@ -90,10 +93,15 @@ class Simulator {
         textSize(15)
         fill(255)
         noStroke()
+        let s = 0;
         for (const [route, { sum, n }] of this.averages) {
-            text(`${route}: ${sum / n}`, width - 80, 20 + off_y)
-            off_y += 20;
+            // text(`${route}: ${(sum / n).toFixed(2)}, ${n}`, width - 80, 20 + off_y)
+            // off_y += 20;
+            s += n
         }
+        text(`${s}`, width - 80, 20 + off_y)
+        // chart.data.datasets[0].data.push(s);
+        // chart.update()
     }
 
 }

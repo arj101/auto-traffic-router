@@ -7,9 +7,11 @@ let algorithm = 'f'
 let densityCoeff = 200
 let updateInterval = 500
 let clearanceCoeff = 0
-let velCoeff = 60
-let velCoeff2 = 0.001;
+let velCoeff = 100
+let velCoeff2 = 0.01;
+const ctx = document.getElementById('vehicle-counter').getContext('2d');
 function setup() {
+
 	createCanvas(740, 480);
 	strokeCap('ROUNDED')
 

@@ -233,7 +233,7 @@ class Road {
 			let cost = 0
 			cost +=
 				densityCoeff * this.laneFwd.size / this.pathLength
-			if (nVel > 0) cost += (this.laneFwd.size / this.pathLength * velCoeff * (1 / (10e-10 + avgVel))) ** 2
+			if (nVel > 0) cost += (this.laneFwd.size / (this.pathLength ** 2) * velCoeff * (1 / (10e-10 + avgVel))) ** 2
 			// cost += densityCoeff * this.laneFwd.size / this.pathLength * clearanceCoeff * ((invDistSum != 0 && invDistSum != Infinity) ? invDistSum / nClearance : 0)
 			return (cost
 			)
@@ -261,7 +261,7 @@ class Road {
 			let cost = 0
 
 			cost += densityCoeff * this.laneBck.size / this.pathLength;
-			if (nVel > 0) cost += (this.laneBck.size / this.pathLength * velCoeff * (1 / (10e-10 + avgVel))) ** 2
+			if (nVel > 0) cost += (this.laneBck.size / (this.pathLength ** 2) * velCoeff * (1 / (10e-10 + avgVel))) ** 2
 			// densityCoeff * this.laneBck.size / this.pathLength * clearanceCoeff * ((invDistSum != 0 && invDistSum != Infinity) ? invDistSum / nClearance : 0)
 			return (
 				cost
