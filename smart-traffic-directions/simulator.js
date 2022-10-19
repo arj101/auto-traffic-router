@@ -19,6 +19,7 @@ class Simulator {
         this.intersectionIds = []
         this.majorIntersectionIds = []
         this.averages = new Map();
+        this.congested_roads = []
 
         for (const intersection of this.roadMap.intersections.keys()) {
             if (/^[a-z]+$/.test(intersection)) this.majorIntersectionIds.push(intersection)
@@ -34,6 +35,28 @@ class Simulator {
     clearAvg() {
         this.travelTimeN = 0
         this.travelTimeSum = 0
+    }
+
+    createCongestion(available_roads) {
+        console.log(available_roads)
+        let road = available_roads[Math.round((available_roads.length - 1) * Math.random())];
+        while (this.congested_roads.includes(road)) {
+            road = available_roads[Math.round((available_roads.length - 1) * Math.random())];
+        }
+        console.log(road)
+        let vehicles = Math.random() > 0.5 ? this.roadMap.roads.get(road).laneFwd : this.roadMap.roads.get(road).laneBck;
+        vehicles = Array.from(vehicles.keys());
+        let random_v = vehicles[Math.round((vehicles.length - 1) * vehicles.length)]
+        let v = this.vehicles.get(random_v)
+        if (v) {
+            const av = v.maxVel;
+            v.maxVel = 0;
+            this.congested_roads.push(road)
+            setTimeout(() => {
+                v.maxVel = av;
+                this.congested_roads.splice(this.congested_roads.indexOf(road), 1)
+            }, (Math.random() / 2 + 0.5) * 5000 / this.speed)
+        }
     }
 
     pickNode() {
