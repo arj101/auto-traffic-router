@@ -170,6 +170,6 @@ class MapEditor {
         textSize(15)
         fill(255)
         noStroke()
-        text(`t_av: ${sim.avgTravelTime}`, width - 100, 20)
+        // text(`t_av: ${sim.avgTravelTime}`, width - 100, 20)
     }
 }

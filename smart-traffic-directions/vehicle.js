@@ -75,11 +75,11 @@ class Vehicle {
         // this.vel = desiredVel
 
         if (Math.random() < 0.01) this.vel /= (2.5 + Math.random() * 2)
-        // if (Math.random() <= 0.0005 && this.pos / this.currRoad.pathLength > 0.2 && this.pos / this.currRoad.pathLength < 0.8) {
-        //     const actualMaxVel = this.maxVel
-        //     this.maxVel = 0
-        //     setTimeout(() => this.maxVel = 50 + Math.random() * 150, 5000 / scaling)
-        // }
+        if (Math.random() <= 0.0002 && this.pos / this.currRoad.pathLength > 0.2 && this.pos / this.currRoad.pathLength < 0.8) {
+            const actualMaxVel = this.maxVel
+            this.maxVel = 0
+            setTimeout(() => this.maxVel = 50 + Math.random() * 150, 5000 / scaling)
+        }
 
         this.posHistory.push(this.pos)
         if (this.posHistory.length > 90) {

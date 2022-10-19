@@ -8,8 +8,9 @@ let densityCoeff = 200
 let updateInterval = 500
 let clearanceCoeff = 0
 let velCoeff = 60
+let velCoeff2 = 0.001;
 function setup() {
-	createCanvas(640, 480);
+	createCanvas(740, 480);
 	strokeCap('ROUNDED')
 
 	const mapData = [

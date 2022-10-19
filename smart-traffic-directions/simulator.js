@@ -18,6 +18,7 @@ class Simulator {
         this.avgTravelTime = 0
         this.intersectionIds = []
         this.majorIntersectionIds = []
+        this.averages = new Map();
 
         for (const intersection of this.roadMap.intersections.keys()) {
             if (/^[a-z]+$/.test(intersection)) this.majorIntersectionIds.push(intersection)
@@ -42,7 +43,7 @@ class Simulator {
         return this.roadMap.intersections.get(this.intersectionIds[Math.round(Math.random() * (this.intersectionIds.length - 1))])
     }
 
-    spawnVehicles(n = 5, s = 'a', t = 'c') {
+    spawnVehicles(n = 5, s, t) {
         for (let i = 0; i < n; i++) {
             const startNode = this.pickNode()
             let endNode = this.pickNode()
@@ -68,9 +69,13 @@ class Simulator {
             const v = vehicle.update(this.speed, this, map)
             if (v !== true) {
                 if (v == 'f') {
-                    this.travelTimeSum += (currT - vehicle.creationTime) / 1000
-                    this.travelTimeN += 1
+                    if (!this.majorIntersectionIds.includes(vehicle.startNodeId) || !this.majorIntersectionIds.includes(vehicle.targetNodeId)) continue
+                    let prevSum = this.averages.get(`${vehicle.startNodeId} ${vehicle.targetNodeId}`)?.sum || 0
+                    let prevN = this.averages.get(`${vehicle.startNodeId} ${vehicle.targetNodeId}`)?.n || 0
+                    prevSum += (currT - vehicle.creationTime) / 1000
+                    prevN += 1
                     this.avgTravelTime = this.travelTimeSum / this.travelTimeN
+                    this.averages.set(`${vehicle.startNodeId} ${vehicle.targetNodeId}`, { sum: prevSum, n: prevN })
                 }
                 this.vehicles.delete(idx)
                 continue
@@ -81,6 +86,14 @@ class Simulator {
         // for (const [idx, v] of this.vehicles) {
         //     // if (Math.random() < 0.01) v.maxVel = 0
         // }
+        let off_y = 0;
+        textSize(15)
+        fill(255)
+        noStroke()
+        for (const [route, { sum, n }] of this.averages) {
+            text(`${route}: ${sum / n}`, width - 80, 20 + off_y)
+            off_y += 20;
+        }
     }
 
 }

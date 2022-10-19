@@ -219,7 +219,7 @@ class Road {
 			this.laneFwd.forEach((_, vid) => {
 				const v = sim.vehicles.get(vid)
 				if (v?.getPos(5)) {
-					avgVel += (Math.abs((v.pos - v.getPos(5)) / 20)) / (deltaTime / 1000)
+					avgVel += (velCoeff2 * Math.abs((v.pos - v.getPos(5)))) / (deltaTime / 1000)
 					nVel += 1
 				}
 				if (v?.vehicleInfront) {
@@ -233,7 +233,7 @@ class Road {
 			let cost = 0
 			cost +=
 				densityCoeff * this.laneFwd.size / this.pathLength
-			if (nVel > 0) cost += this.laneFwd.size / this.pathLength * velCoeff * (1 / (10e-10 + avgVel))
+			if (nVel > 0) cost += (this.laneFwd.size / this.pathLength * velCoeff * (1 / (10e-10 + avgVel))) ** 2
 			// cost += densityCoeff * this.laneFwd.size / this.pathLength * clearanceCoeff * ((invDistSum != 0 && invDistSum != Infinity) ? invDistSum / nClearance : 0)
 			return (cost
 			)
@@ -246,7 +246,7 @@ class Road {
 			this.laneBck.forEach((_, vid) => {
 				const v = sim.vehicles.get(vid)
 				if (v?.getPos(5)) {
-					avgVel += (Math.abs((v.pos - v.getPos(5)) / 20)) / (deltaTime / 1000)
+					avgVel += (velCoeff2 * Math.abs(v.pos - v.getPos(5))) / (deltaTime / 1000)
 					nVel += 1
 				}
 				if (v?.vehicleInfront) {
@@ -261,7 +261,7 @@ class Road {
 			let cost = 0
 
 			cost += densityCoeff * this.laneBck.size / this.pathLength;
-			if (nVel > 0) cost += this.laneBck.size / this.pathLength * velCoeff * (1 / (10e-10 + avgVel))
+			if (nVel > 0) cost += (this.laneBck.size / this.pathLength * velCoeff * (1 / (10e-10 + avgVel))) ** 2
 			// densityCoeff * this.laneBck.size / this.pathLength * clearanceCoeff * ((invDistSum != 0 && invDistSum != Infinity) ? invDistSum / nClearance : 0)
 			return (
 				cost
