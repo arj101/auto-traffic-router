@@ -352,6 +352,26 @@ class RoadMap {
 		this.intersections.set(id, intersection)
 	}
 
+	create_from(map_data) {
+		for (const intersection of map_data.intersections) {
+			this.intersections.set(intersection.id, new Intersection(intersection.id, createVector(intersection.pos[0], intersection.pos[1]), []))
+		}
+
+		for (const road_data of map_data.roads) {
+			let vertices = []
+			if (road_data.vertices)
+				vertices = road_data.vertices.map(([x, y]) => createVector(x, y))
+			const road = new Road(this.intersections.get(road_data.n1).pos, this.intersections.get(road_data.n2).pos, road_data.n1, road_data.n2, vertices)
+			this.roads.set(road.id(), road)
+			const node1 = this.intersections.get(road_data.n1)
+			const node2 = this.intersections.get(road_data.n2)
+			node1.connections.push(node2.id)
+			node2.connections.push(node1.id)
+			node1.roads.push(`${road_data.n1}-${road_data.n2}`)
+			node2.roads.push(`${road_data.n1}-${road_data.n2}`)
+		}
+	}
+
 	bestRoute(node1Id, node2Id, currRoadId) {
 		const { cost, road } = this.cost(currRoadId, node1Id, node2Id);
 		// console.log(`cost: ${Math.round(cost)}, via ${road.node1Id}-${road.node2Id}`)

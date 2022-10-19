@@ -10,8 +10,8 @@ class Simulator {
         this.vehicles = new Map()
         this.state = true
         this.speed = 0.3
-        this.spawnProbability = 0.8
-        this.maxSpawnsPerFrame = 5
+        this.spawnProbability = 0.1
+        this.maxSpawnsPerFrame = 1
         this.count = 0
         this.travelTimeSum = 0
         this.travelTimeN = 0
@@ -38,12 +38,10 @@ class Simulator {
     }
 
     createCongestion(available_roads) {
-        console.log(available_roads)
         let road = available_roads[Math.round((available_roads.length - 1) * Math.random())];
         while (this.congested_roads.includes(road)) {
             road = available_roads[Math.round((available_roads.length - 1) * Math.random())];
         }
-        console.log(road)
         let vehicles = Math.random() > 0.5 ? this.roadMap.roads.get(road).laneFwd : this.roadMap.roads.get(road).laneBck;
         vehicles = Array.from(vehicles.keys());
         let random_v = vehicles[Math.round((vehicles.length - 1) * vehicles.length)]
@@ -60,10 +58,12 @@ class Simulator {
     }
 
     pickNode() {
-        if (Math.random() < 0.65) {
-            return this.roadMap.intersections.get(this.majorIntersectionIds[Math.round(Math.random() * (this.majorIntersectionIds.length - 1))])
-        }
-        return this.roadMap.intersections.get(this.intersectionIds[Math.round(Math.random() * (this.intersectionIds.length - 1))])
+        // if (Math.random() < 0.65) {
+        // return this.roadMap.intersections.get(this.majorIntersectionIds[Math.round(Math.random() * (this.majorIntersectionIds.length - 1))])
+        // }
+        // return this.roadMap.intersections.get(this.intersectionIds[Math.round(Math.random() * (this.intersectionIds.length - 1))])
+        return this.roadMap.intersections.get(this.majorIntersectionIds[Math.round(Math.random() * (this.majorIntersectionIds.length - 1))])
+
     }
 
     spawnVehicles(map, n = 5, s, t) {
@@ -113,7 +113,8 @@ class Simulator {
         //     // if (Math.random() < 0.01) v.maxVel = 0
         // }
         let off_y = 0;
-        textSize(15)
+        textSize(18)
+
         fill(255)
         noStroke()
         let s = 0;
@@ -122,7 +123,7 @@ class Simulator {
             // off_y += 20;
             s += n
         }
-        text(`${s}`, width - 80, 20 + off_y)
+        text(`Vehicle count: ${s}`, width - 10 - textWidth(`Vehicle count: ${s}`), 20 + off_y)
         // chart.data.datasets[0].data.push(s);
         // chart.update()
     }

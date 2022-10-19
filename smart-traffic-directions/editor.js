@@ -56,6 +56,22 @@ class MapEditor {
             this.tmpStartNode = null;
             this.tmpEndNode = null;
         }
+
+        if (this.currKey == 'f' && this.selectionType == 'edge') {
+            let edge = this.selectionItem;
+            let n1 = this.map.intersections.get(edge.node1Id)
+            let n2 = this.map.intersections.get(edge.node2Id)
+            console.log(n1.roads, edge.id())
+            if (n1.roads.includes(edge.id())) {
+                n1.roads.splice(n1.roads.indexOf(edge.id()), 1)
+                this.map.intersections.set(edge.node1Id, n1)
+
+            } if (n2.connections.includes(edge.id())) {
+                n2.roads.splice(n2.roads.indexOf(edge.id()), 1)
+                this.map.intersections.set(edge.node2Id, n2)
+            }
+
+        }
     }
 
     onKeyRelease() {
