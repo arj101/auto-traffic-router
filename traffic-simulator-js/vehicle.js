@@ -25,7 +25,7 @@ class Vehicle {
         this.maxVel = 50 + Math.random() * 50
         this.maxAcc = 15 + Math.random() * 15
         this.dir = 0
-        this.vel = 0
+        this.vel = this.maxVel
         this.idealClearance = 5 + Math.random() * 5;
         this.lookAheadDist = 50 + Math.random() * 100;
         this.roadCount = 0;
@@ -83,7 +83,7 @@ class Vehicle {
             setTimeout(() => {
                 this.maxVel = actualMaxVel;
                 this.braked = false
-            }, 50000 / scaling
+            }, 3000 / scaling
             )
         }
         // this.vel = desiredVel
@@ -107,7 +107,7 @@ class Vehicle {
 
     enterRoad(roadId, nodeId, sim, roadMap) {
         this.roadCount += 1
-        this.vel = this.maxVel
+        this.vel *= 0.5;
         this.currRoad = roadMap.roads.get(roadId)
         const { dir, pathSegment, infront, pos } = this.currRoad.enter(this.id, nodeId, sim)
         this.vehicleInfront = sim.vehicles.get(infront)

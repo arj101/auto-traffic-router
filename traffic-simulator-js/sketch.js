@@ -19,24 +19,9 @@ function setup() {
 	// 	map.createIntersection(intersection.id, createVector(intersection.pos[0], intersection.pos[1]), intersection.connections)
 	// }
 
-	map.create_from({
-		intersections: [
-			{
-				id: 'a',
-				pos: [100, 100]
-			},
-			{
-				id: 'b',
-				pos: [300, 300]
-			}
-		],
-		roads: [
-			{
-				n1: 'a',
-				n2: 'b'
-			}
-		]
-	})
+	map.create_from(
+		mapData
+	)
 
 
 	sim = new Simulator(map)
