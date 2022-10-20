@@ -4,6 +4,7 @@ extern crate lazy_static;
 mod light_controller;
 mod map;
 mod mask_loader;
+mod presets;
 mod route_indicator;
 mod vehicle_tracker;
 
@@ -90,31 +91,7 @@ fn main() {
         }
     });
 
-    let mut map = RoadMap::new();
-    map.create_intersection(IntersectionId(1), (0, 0));
-    map.create_intersection(IntersectionId(2), (0, 0));
-    map.create_intersection(IntersectionId(3), (0, 0));
-    map.create_intersection(IntersectionId(4), (0, 0));
-
-    map.create_intersection(IntersectionId('a' as u32), (0, 0));
-    map.create_intersection(IntersectionId('b' as u32), (0, 0));
-    map.create_intersection(IntersectionId('c' as u32), (0, 0));
-    map.create_intersection(IntersectionId('d' as u32), (0, 0));
-    map.create_intersection(IntersectionId('e' as u32), (0, 0));
-    map.create_intersection(IntersectionId('f' as u32), (0, 0));
-
-    map.create_road(IntersectionId(1), IntersectionId(2), 36.0);
-    map.create_road(IntersectionId(1), IntersectionId(4), 50.0);
-
-    map.create_road(IntersectionId(2), IntersectionId(4), 45.0);
-    map.create_road(IntersectionId(2), IntersectionId(3), 52.0);
-
-    map.create_road(IntersectionId(3), IntersectionId(4), 40.0);
-
-    map.create_road(IntersectionId('a' as u32), IntersectionId(1), 14.0);
-    map.create_road(IntersectionId('b' as u32), IntersectionId(2), 20.0);
-    map.create_road(IntersectionId('c' as u32), IntersectionId(3), 26.0);
-    map.create_road(IntersectionId('d' as u32), IntersectionId(4), 26.0);
+    let map = presets::create_map();
     let map = Arc::new(std::sync::Mutex::new(map));
 
     let map_clone = Arc::clone(&map);
@@ -125,7 +102,7 @@ fn main() {
         );
 
         let map = map_clone;
-        let route_indicators = route_indicator::create_route_indicators();
+        let route_indicators = presets::create_route_indicators();
         let mut last_update = Instant::now();
 
         let mut update = || {

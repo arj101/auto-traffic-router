@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use std::hash::Hash;
 use std::io::Write;
 
+#[allow(non_camel_case_types)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Led {
     C_RU_1_4,
@@ -12,7 +13,7 @@ pub enum Led {
     E_RU_1_4,
     E_RD_1_4,
 
-    B_L_a_1, //0 address
+    B_L_a_1,
     B_U_a_1,
     C_L_a_1,
     C_U_a_1,
@@ -39,7 +40,7 @@ pub enum Led {
     D_R_3_2,
     D_U_3_2,
 
-    A_L_c_3, //(ignore the 1)
+    A_L_c_3,
     A_R_c_3,
     B_L_c_3,
     B_R_c_3,
@@ -82,7 +83,7 @@ pub fn led_to_addr(led: Led) -> LedAddr {
         E_RU_1_4 => LedAddr(1, 4),
         E_RD_1_4 => LedAddr(1, 5),
 
-        B_L_a_1 => LedAddr(0, 1), //0 address
+        B_L_a_1 => LedAddr(0, 1),
         B_U_a_1 => LedAddr(0, 0),
         C_L_a_1 => LedAddr(0, 3),
         C_U_a_1 => LedAddr(0, 2),
@@ -109,7 +110,7 @@ pub fn led_to_addr(led: Led) -> LedAddr {
         D_R_3_2 => LedAddr(4, 14),
         D_U_3_2 => LedAddr(4, 15),
 
-        A_L_c_3 => LedAddr(2, 0), //(ignore the 1)
+        A_L_c_3 => LedAddr(2, 0),
         A_R_c_3 => LedAddr(2, 1),
         B_L_c_3 => LedAddr(2, 2),
         B_R_c_3 => LedAddr(2, 3),
@@ -131,22 +132,6 @@ pub fn led_to_addr(led: Led) -> LedAddr {
         C_LU_d_4 => LedAddr(3, 7),
         C_U_d_4 => LedAddr(3, 8),
     }
-}
-
-lazy_static! {
-    static ref CONTROLLER_ADDR: HashMap<[&'static str; 2], u8> = [
-        (["1", "a-1"], 0),
-        (["2", "b-2"], 4),
-        (["2", "2-4"], 1),
-        (["2", "2-3"], 4),
-        (["3", "c-3"], 2),
-        (["4", "1-4"], 1),
-        (["4", "3-4"], 2),
-        (["4", "d-4"], 2),
-    ]
-    .iter()
-    .copied()
-    .collect();
 }
 
 pub struct LightController {
