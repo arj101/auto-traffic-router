@@ -27,8 +27,6 @@ def constrain(val, l, u):
     return val
 
 
-roadmask_l = cv2.cvtColor(cv2.imread(
-    '/home/ge9x/science-fair-2022/road-masks/1-4-l.png'), cv2.COLOR_BGR2GRAY)
 
 map_outline = cv2.imread('../map-outline.png')
 

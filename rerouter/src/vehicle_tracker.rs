@@ -47,7 +47,7 @@ impl Vehicle {
     pub fn update(&mut self, pos: (f64, f64), vel: f64, lane_id: LaneId) {
         self.pos = pos;
         self.vel = vel;
-        if self.vel_n >= 5.0 {
+        if self.vel_n >= 15.0 {
             self.vel_n = 0.0;
             self.vel_sum = 0.0;
         }
@@ -116,7 +116,7 @@ impl Tracker {
         let mut avg_vel = 0.0;
         for id in lane {
             if let Some(v) = self.vehicles.get(id) {
-                if v.update_count > 50 && v.first_detect.elapsed().as_millis() > THRESH_TIME * 5 {
+                if v.update_count > 50 && v.first_detect.elapsed().as_millis() > THRESH_TIME * 2 {
                     avg_vel += v.avg_vel;
                     vel_n += 1;
                 }

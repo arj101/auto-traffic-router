@@ -176,11 +176,11 @@ pub fn create_route_indicators() -> Vec<RouteIndicator> {
             &[
                 (
                     IntersectionId('a' as u32),
-                    &[(RoadId(2, 4), Led::A_L_3_4), (RoadId(1, 2), Led::A_U_3_4)],
+                    &[(RoadId(2, 4), Led::A_L_3_4), (RoadId(1, 4), Led::A_U_3_4)],
                 ),
                 (
                     IntersectionId('b' as u32),
-                    &[(RoadId(2, 4), Led::B_L_3_4), (RoadId(1, 2), Led::B_U_3_4)],
+                    &[(RoadId(2, 4), Led::B_L_3_4), (RoadId(1, 4), Led::B_U_3_4)],
                 ),
             ],
         ),
