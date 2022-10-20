@@ -121,7 +121,7 @@ fn main() {
             }
 
             controller.clear();
-            delay(150);
+            delay(100);
 
             for led in &led_state_buffer {
                 controller.set_led(**led, true)
