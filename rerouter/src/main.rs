@@ -102,29 +102,31 @@ fn main() {
         let route_indicators = presets::create_route_indicators();
         let mut last_update = Instant::now();
 
+        let mut led_state_buffer = vec![];
         let mut update = || {
-            controller.clear();
-            delay(150);
-            let map = map.lock().unwrap();
-
-            for indicator in &route_indicators {
-                let curr_road = indicator.road_id;
-                let n1 = indicator.int_id;
-
-                for (n2, leds) in &indicator.routes {
-                    let (cost, maybe_road) = map.best_direction(n1, *n2, Some(&curr_road));
-                    if let Some(road) = maybe_road {
-                        // println!(
-                        //     "{}->{}({}) costs {} via {:?}",
-                        //     n1.0, n2.0, n2.0 as u8 as char, cost, road
-                        // );
-                        if let Some(led) = leds.get(&road) {
-                            controller.set_led(*led, true);
-                            // delay(5);
+            {
+                let map = map.lock().unwrap();
+                for indicator in &route_indicators {
+                    let curr_road = indicator.road_id;
+                    let n1 = indicator.int_id;
+                    for (n2, leds) in &indicator.routes {
+                        let (_, maybe_road) = map.best_direction(n1, *n2, Some(&curr_road));
+                        if let Some(road) = maybe_road {
+                            if let Some(led) = leds.get(&road) {
+                                led_state_buffer.push(led);
+                            }
                         }
                     }
                 }
             }
+
+            controller.clear();
+            delay(150);
+
+            for led in &led_state_buffer {
+                controller.set_led(**led, true)
+            }
+            led_state_buffer.clear();
         };
 
         update();

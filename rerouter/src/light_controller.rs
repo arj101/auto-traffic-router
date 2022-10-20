@@ -2,6 +2,7 @@ use serial2::SerialPort;
 use std::collections::HashMap;
 use std::hash::Hash;
 use std::io::Write;
+use std::time::Duration;
 
 #[allow(non_camel_case_types)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -142,7 +143,9 @@ pub struct LightController {
 
 impl LightController {
     pub fn create_and_init(port_name: &str, baudrate: u32) -> Self {
-        let port = SerialPort::open(port_name, baudrate).expect("Failed to open serial port");
+        let mut port = SerialPort::open(port_name, baudrate).expect("Failed to open serial port");
+        port.set_read_timeout(Duration::from_millis(300)).unwrap();
+        port.set_write_timeout(Duration::from_millis(300)).unwrap();
         let mut buffer = [0; 256];
         let mut off = 0;
         println!("====starting initialisation=====");
@@ -199,8 +202,8 @@ impl LightController {
         if let Err(e) = write!(&mut self.port, "{}{:02}{}\n", i2c_addr, led_addr, state) {
             println!("Error setting led: {:?}", e);
         } else {
-            self.port.flush().unwrap();
-            if let Ok(read) = self.port.read(&mut self.buffer) {
+            // self.port.flush().unwrap();
+            if let Err(e) = self.port.read(&mut self.buffer) {
                 // println!(
                 //     "response: {:?}",
                 //     self.buffer[..read]
@@ -208,8 +211,8 @@ impl LightController {
                 //         .map(|c| *c as char)
                 //         .collect::<String>(),
                 // );
-            } else {
-                println!("**No response after setting led**");
+                // } else {
+                println!("**No response after setting led**, {}", e);
             }
         }
     }
