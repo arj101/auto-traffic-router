@@ -1,6 +1,3 @@
-#[macro_use]
-extern crate lazy_static;
-
 mod light_controller;
 mod map;
 mod mask_loader;
@@ -153,7 +150,7 @@ fn main() {
     // println!("{}", video_subsys.gl_attr().context_major_version());
 
     let window = video_subsys
-        .window("Automatic traffic router (traffic map)", 640, 480)
+        .window("Automatic traffic router (traffic map)", 840, 480)
         .position_centered()
         .build()
         .unwrap();
@@ -168,6 +165,12 @@ fn main() {
     let texture_creator = canvas.texture_creator();
     let texture = texture_creator.load_texture("../map-outline.png").unwrap();
 
+    let mut vel_coeff = 0.0;
+    let mut density_coeff = 500.0;
+
+    let mut vel_rect;
+    let mut density_rect;
+
     let mut event_pump = ctx.event_pump().unwrap();
     'running: loop {
         canvas.set_draw_color(Color::RGBA(20, 20, 20, 200));
@@ -181,71 +184,142 @@ fn main() {
                 // canvas.fill_rect(Rect::new(d.x as i32, d.y as i32, 8, 8));
                 tracker.on_recv(d)
             }
+        }
 
-            canvas.set_draw_color(Color::CYAN);
-            for (_, vehicle) in &tracker.vehicles {
-                let _ = canvas.fill_rect(Rect::new(
-                    vehicle.pos.0 as i32 - 5,
-                    vehicle.pos.1 as i32 - 5,
-                    10,
-                    10,
-                ));
+        canvas.set_draw_color(Color::CYAN);
+        for (_, vehicle) in &tracker.vehicles {
+            let _ = canvas.fill_rect(Rect::new(
+                vehicle.pos.0 as i32 - 5,
+                vehicle.pos.1 as i32 - 5,
+                10,
+                10,
+            ));
 
-                let lane = vehicle.lane_id;
-                let n1_id = lane.0 .0;
-                let n2_id = lane.0 .1;
-                let lane_id = lane.1;
+            let lane = vehicle.lane_id;
+            let n1_id = lane.0 .0;
+            let n2_id = lane.0 .1;
+            let lane_id = lane.1;
 
+            let srf = font
+                .render(&format!(
+                    "{}-{} {}",
+                    if n1_id < 10 {
+                        format!("{}", n1_id)
+                    } else {
+                        format!("{}", n1_id as u8 as char)
+                    },
+                    if n2_id < 10 {
+                        format!("{}", n2_id)
+                    } else {
+                        format!("{}", n2_id as u8 as char)
+                    },
+                    if lane_id == 1 { "right" } else { "left" },
+                ))
+                .blended(Color::MAGENTA)
+                .expect("rendered text");
+            let texture = texture_creator
+                .create_texture_from_surface(srf)
+                .expect("texture");
+            let TextureQuery { width, height, .. } = texture.query();
+            let _ = canvas.copy(
+                &texture,
+                None,
+                Some(Rect::new(
+                    vehicle.pos.0 as i32 + 5,
+                    vehicle.pos.1 as i32 + 5,
+                    width,
+                    height,
+                )),
+            );
+        }
+
+        {
+            let mut map = map.lock().unwrap();
+            let mut y = 200;
+            let mut visited = vec![];
+            for (LaneId(road_id, lane_id), _lane) in &tracker.lanes {
+                let road_len = map.road_length(road_id).unwrap();
+                let cost = tracker
+                    .lane_dynamic_cost(
+                        &LaneId(*road_id, *lane_id),
+                        road_len,
+                        density_coeff,
+                        vel_coeff,
+                        0.0,
+                    )
+                    .unwrap();
+
+                if *lane_id == 0 {
+                    map.set_cost(road_id, Some(cost), None);
+                } else {
+                    map.set_cost(road_id, None, Some(cost));
+                }
+
+                if (visited.contains(road_id)) {
+                    continue;
+                }
+
+                let road = map.roads.get(road_id).unwrap();
                 let srf = font
                     .render(&format!(
-                        "{}-{} {}",
-                        if n1_id < 10 {
-                            format!("{}", n1_id)
-                        } else {
-                            format!("{}", n1_id as u8 as char)
-                        },
-                        if n2_id < 10 {
-                            format!("{}", n2_id)
-                        } else {
-                            format!("{}", n2_id as u8 as char)
-                        },
-                        if lane_id == 1 { "right" } else { "left" },
+                        "road {}-{} cost: {}, {}",
+                        road_id.0,
+                        road_id.1,
+                        road.cost_from(&IntersectionId(road_id.0), true).round(),
+                        road.cost_from(&IntersectionId(road_id.1), true).round()
                     ))
-                    .blended(Color::MAGENTA)
+                    .blended(Color::CYAN)
                     .expect("rendered text");
                 let texture = texture_creator
                     .create_texture_from_surface(srf)
                     .expect("texture");
                 let TextureQuery { width, height, .. } = texture.query();
-                let _ = canvas.copy(
-                    &texture,
-                    None,
-                    Some(Rect::new(
-                        vehicle.pos.0 as i32 + 5,
-                        vehicle.pos.1 as i32 + 5,
-                        width,
-                        height,
-                    )),
-                );
-            }
-
-            {
-                let mut map = map.lock().unwrap();
-                for (LaneId(road_id, lane_id), _lane) in &tracker.lanes {
-                    let road_len = map.road_length(road_id).unwrap();
-                    let cost = tracker
-                        .lane_dynamic_cost(&LaneId(*road_id, *lane_id), road_len, 500.0, 50.0, 0.0)
-                        .unwrap();
-
-                    if *lane_id == 0 {
-                        map.set_cost(road_id, Some(cost), None);
-                    } else {
-                        map.set_cost(road_id, None, Some(cost));
-                    }
-                }
+                let text_rect = Rect::new(820 - width as i32, y, width, height);
+                let _ = canvas.copy(&texture, None, Some(text_rect));
+                y += height as i32 + 5;
+                visited.push(*road_id);
             }
         }
 
+        canvas.set_draw_color(Color::WHITE);
+
+        let srf = font
+            .render(&format!("Speed coeff: {}", vel_coeff))
+            .blended(Color::CYAN)
+            .expect("rendered text");
+        let texture = texture_creator
+            .create_texture_from_surface(srf)
+            .expect("texture");
+        let TextureQuery { width, height, .. } = texture.query();
+        let text_rect = Rect::new(820 - width as i32, 50, width, height);
+        vel_rect = Rect::new(
+            text_rect.x - 5,
+            text_rect.y - 5,
+            text_rect.width() + 10,
+            text_rect.height() + 10,
+        );
+        let _ = canvas.copy(&texture, None, Some(text_rect));
+        canvas.draw_rect(vel_rect);
+
+        let srf = font
+            .render(&format!("Density coeff: {}", density_coeff))
+            .blended(Color::CYAN)
+            .expect("rendered text");
+        let texture = texture_creator
+            .create_texture_from_surface(srf)
+            .expect("texture");
+        let TextureQuery { width, height, .. } = texture.query();
+        let text_rect = Rect::new(820 - width as i32, 100, width, height);
+        density_rect = Rect::new(
+            text_rect.x - 5,
+            text_rect.y - 5,
+            text_rect.width() + 10,
+            text_rect.height() + 10,
+        );
+        let _ = canvas.copy(&texture, None, Some(text_rect));
+        canvas.draw_rect(density_rect);
+
+        let mouse_state = event_pump.mouse_state();
         for event in event_pump.poll_iter() {
             match event {
                 Event::Quit { .. }
@@ -253,6 +327,15 @@ fn main() {
                     keycode: Some(Keycode::Escape),
                     ..
                 } => break 'running,
+
+                Event::MouseWheel { y, .. } => {
+                    if vel_rect.contains_point((mouse_state.x(), mouse_state.y())) {
+                        vel_coeff += (y.signum() * y * y) as f64;
+                    }
+                    if density_rect.contains_point((mouse_state.x(), mouse_state.y())) {
+                        density_coeff += (y.signum() * y * y) as f64;
+                    }
+                }
                 _ => {}
             }
         }
@@ -261,16 +344,10 @@ fn main() {
         tracker.update();
     }
 
-    // loop {
-    //     if let Some(stdout) = &mut detector.stdout {
-    //         let lines = BufReader::new(stdout).lines().enumerate().take(1);
-    //         for (counter, line) in lines {
-    //             println!("{}, {:?}", counter, line);
-    //         }
-    //     }
-    //     // println!("-----------------");
-    //     // delay(10);
-    // }
+    detector_thread.join().expect("join detector thread");
+    controller_thread
+        .join()
+        .expect("join light controller thread");
 }
 
 fn delay(duration_ms: u64) {
