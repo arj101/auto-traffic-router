@@ -7,7 +7,7 @@ import math
 
 
 def dist(x1, y1, x2, y2):
-    math.sqrt(math.pow(x2 - x1, 2) + math.pow(y2 - y1, 2))
+    return math.sqrt(math.pow(x2 - x1, 2) + math.pow(y2 - y1, 2))
 
 
 upper_h = 10
@@ -25,7 +25,6 @@ def constrain(val, l, u):
     if val < l:
         return l
     return val
-
 
 
 map_outline = cv2.imread('../map-outline.png')
@@ -57,7 +56,7 @@ cv2.createTrackbar('sat upper', 'tracker', 255, 255, nothing)
 cv2.createTrackbar('val upper', 'tracker', 255, 255, nothing)
 
 # tracker = object_tracker.ObjectTracker(10, 0.05)
-data = {'e': ((100, 100), 3, 0, 0)}
+data = {}
 buffer = {}
 thresh_dist = 20
 thresh_time = 1.0
@@ -117,14 +116,14 @@ while True:
                 nearest_angle = None
                 for (key, ((x2, y2), t, vel, angle)) in data.items():
 
-                    d = math.dist([float(cx), float(cy)],
-                                  [float(x2), float(y2)])
+                    d = dist(float(cx), float(cy),
+                             float(x2), float(y2))
                     # print(float(cx))
 
-                    max_d = math.dist(
-                        [0, 0],
-                        [(thresh_dist + vel*2) * math.cos(angle),
-                         (thresh_dist + vel*2) * math.sin(angle)]
+                    max_d = dist(
+                        0, 0,
+                        (thresh_dist + vel*2) * math.cos(angle),
+                        (thresh_dist + vel*2) * math.sin(angle)
                     )
 
                     if d <= constrain(max_d, thresh_dist, 100):
