@@ -14,6 +14,7 @@ use crate::{
 #[derive(Debug, Clone, Copy, Eq, PartialEq, PartialOrd, Ord, Hash)]
 pub struct VehicleId(u64);
 
+//represents a vehicle being tracked
 #[derive(Debug)]
 pub struct Vehicle {
     pub id: VehicleId,
@@ -80,18 +81,17 @@ impl Tracker {
         }
     }
 
+    ///compares vehicle position with road masks to find out on which road the vehicle is
     fn lane_from_pos(&self, pos: (f64, f64)) -> Option<&LaneId> {
-        let mut lane = None;
         for (lane_id, mask) in &self.road_masks {
-            // println!("{:?}", mask.get_pixel(pos.0 as u32, pos.1 as u32).0);
             if mask.get_pixel(pos.0 as u32, pos.1 as u32).0[0] >= 200u8 {
-                lane = Some(lane_id);
-                continue;
+                return Some(lane_id);
             }
         }
-        lane
+        None
     }
 
+    ///calculates the dynamic part of the cost value(ie, traffic density and average speed)
     pub fn lane_dynamic_cost(
         &self,
         lane_id: &LaneId,
@@ -137,6 +137,7 @@ impl Tracker {
         Some(cost)
     }
 
+    ///called when new data is received from vehicel tracker
     pub fn on_recv(&mut self, data: RxData) {
         let lane = self.lane_from_pos((data.x, data.y));
         if let None = lane {
@@ -158,6 +159,7 @@ impl Tracker {
         }
     }
 
+    ///removes vehicles whose tracking has timed out
     pub fn update(&mut self) {
         let mut remove_list = vec![];
         for (_, vehicle) in &self.vehicles {
