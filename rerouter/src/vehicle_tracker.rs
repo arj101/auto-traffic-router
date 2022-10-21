@@ -1,5 +1,5 @@
 use std::{
-    collections::{HashMap, HashSet},
+    collections::{HashMap, HashSet, VecDeque},
     time::{Duration, Instant},
 };
 
@@ -20,8 +20,7 @@ pub struct Vehicle {
     vel: f64,
     pub pos: (f64, f64),
     pub avg_vel: f64,
-    vel_sum: f64,
-    vel_n: f64,
+    vel_history: VecDeque<f64>,
     last_detect: Instant,
     first_detect: Instant,
     update_count: usize,
@@ -38,8 +37,7 @@ impl Vehicle {
             last_detect: Instant::now(),
             first_detect: Instant::now(),
             avg_vel: vel,
-            vel_n: 1.0,
-            vel_sum: vel,
+            vel_history: VecDeque::new(),
             update_count: 0,
         }
     }
@@ -47,13 +45,11 @@ impl Vehicle {
     pub fn update(&mut self, pos: (f64, f64), vel: f64, lane_id: LaneId) {
         self.pos = pos;
         self.vel = vel;
-        if self.vel_n >= 15.0 {
-            self.vel_n = 0.0;
-            self.vel_sum = 0.0;
+        self.vel_history.push_back(vel);
+        if self.vel_history.len() > 50 {
+            self.vel_history.pop_front();
         }
-        self.vel_sum += vel;
-        self.vel_n += 1.0;
-        self.avg_vel = self.vel_sum / self.vel_n;
+        self.avg_vel = self.vel_history.iter().sum::<f64>() / self.vel_history.len() as f64;
         self.last_detect = Instant::now();
         self.lane_id = lane_id;
         self.update_count += 1;
