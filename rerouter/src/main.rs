@@ -24,7 +24,7 @@ use std::time::Instant;
 use std::{io::BufRead, io::BufReader, num::ParseFloatError, process};
 
 #[derive(Debug)]
-struct RxData {
+pub struct RxData {
     id: u64,
     x: f64,
     y: f64,

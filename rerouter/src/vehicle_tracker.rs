@@ -147,6 +147,10 @@ impl Tracker {
         if self.vehicles.contains_key(&v_id) {
             let vehicle = self.vehicles.get_mut(&v_id).unwrap();
             vehicle.update((data.x, data.y), data.vel, lane);
+            if vehicle.lane_id != lane {
+                self.lanes.get_mut(&lane).unwrap().remove(&vehicle.id);
+                self.lanes.get_mut(&vehicle.lane_id).unwrap().insert(v_id);
+            }
         } else {
             self.vehicles
                 .insert(v_id, Vehicle::new(v_id, (data.x, data.y), data.vel, lane));
