@@ -37,7 +37,7 @@ impl Vehicle {
             last_detect: Instant::now(),
             first_detect: Instant::now(),
             avg_vel: vel,
-            vel_history: VecDeque::new(),
+            vel_history: VecDeque::with_capacity(52),
             update_count: 0,
         }
     }
