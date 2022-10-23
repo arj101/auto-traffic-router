@@ -2,6 +2,8 @@ import * as wasm from "traffic-simulator-wasm";
 
 wasm.greet()
 
+const sim = wasm.Simulator.new();
+
 const canvas = document.getElementsByTagName('canvas')[0]
 canvas.width = window.innerWidth - 5;
 canvas.height = window.innerHeight - 5;

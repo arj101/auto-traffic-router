@@ -50,9 +50,11 @@ impl Intersection {
 
 pub enum VehicleUpdate {
     EntryResponse {
+        pos: f64,
         infront_id: Option<VehicleId>,
         dir: f64,
-        length: f64,
+        path_length: f64,
+        infront_pos: Option<f64>,
     },
 
     UpdateRespone {
@@ -100,15 +102,18 @@ impl Lane {
         self.lane.push((vid, self.start_pos));
         self.vehicles.insert(vid);
 
-        let infront_id = if self.lane.len() < 2 {
-            None
+        let (infront_id, infront_pos) = if self.lane.len() < 2 {
+            (None, None)
         } else {
-            Some(self.lane.get(self.lane.len() - 2).unwrap().0)
+            let v = self.lane.get(self.lane.len() - 2).unwrap();
+            (Some(v.0), Some(v.1))
         };
         VehicleUpdate::EntryResponse {
             infront_id,
             dir: self.dir,
-            length: self.length,
+            path_length: self.length,
+            infront_pos,
+            pos: self.start_pos,
         }
     }
 
@@ -251,11 +256,9 @@ impl Road {
     }
 }
 
-impl Intersection {}
-
 pub struct RoadMap {
     pub roads: HashMap<RoadId, Road>,
-    intersections: HashMap<IntersectionId, Intersection>,
+    pub intersections: HashMap<IntersectionId, Intersection>,
 }
 
 impl RoadMap {
