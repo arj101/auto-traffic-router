@@ -26,8 +26,8 @@ class Vehicle {
         this.maxAcc = 15 + Math.random() * 15
         this.dir = 0
         this.vel = this.maxVel
-        this.idealClearance = 5 + Math.random() * 5;
-        this.lookAheadDist = 50 + Math.random() * 100;
+        this.idealClearance = 0.3 + Math.random() * 1;
+        this.lookAheadDist = 5 + Math.random() * 5;
         this.roadCount = 0;
 
         this.currRoad = this.roadMap.bestRoute(startNode, this.targetNodeId).road
@@ -64,7 +64,7 @@ class Vehicle {
             }
 
             const distanceToInfront = this.dir * (this.vehicleInfront.getPos(20 / (deltaTime / 16)) - this.getPos(20 / (deltaTime / 16)))
-            desiredVel = this.maxVel * (distanceToInfront - this.idealClearance) / (this.idealClearance)
+            desiredVel = this.maxVel * (distanceToInfront - this.idealClearance) / (this.lookAheadDist)
         }
         desiredVel = constrain(desiredVel, 0, this.maxVel)
 
@@ -73,7 +73,8 @@ class Vehicle {
         if (this.dir * dv < 0 && this.roadCount > 1) {
             this.acc = Math.sign(dv) * this.maxAcc * 10
         }
-        this.vel += scaling * this.acc * deltaTime / 1000
+        // this.vel += scaling * this.acc * deltaTime / 1000
+        this.vel = desiredVel;
         if (this.braked) this.vel = 0
         if (!this.braked && mouseIsPressed && dist(this.posX, this.posY, mouseX, mouseY) <= 12) {
             this.vel = 0;
@@ -88,7 +89,7 @@ class Vehicle {
         }
         // this.vel = desiredVel
 
-        if (Math.random() < 0.01 && this.roadCount > 1) this.vel /= (1 + Math.random() * 0.5)
+        if (Math.random() < 0.01 && this.roadCount > 1) this.vel /= (1 + Math.random() * 3)
         if (this.roadCount > 1 && Math.random() <= brakingProbability && this.pos / this.currRoad.pathLength > 0.2 && this.pos / this.currRoad.pathLength < 0.8) {
             const actualMaxVel = this.maxVel
             this.maxVel = 0
@@ -107,7 +108,7 @@ class Vehicle {
 
     enterRoad(roadId, nodeId, sim, roadMap) {
         this.roadCount += 1
-        this.vel *= 0.5;
+        this.vel = this.maxVel
         this.currRoad = roadMap.roads.get(roadId)
         const { dir, pathSegment, infront, pos } = this.currRoad.enter(this.id, nodeId, sim)
         this.vehicleInfront = sim.vehicles.get(infront)

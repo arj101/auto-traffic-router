@@ -10,7 +10,7 @@ class Simulator {
         this.vehicles = new Map()
         this.state = true
         this.speed = 0.5
-        this.spawnProbability = 0.1
+        this.spawnProbability = 0.2
         this.maxSpawnsPerFrame = 1
         this.count = 0
         this.travelTimeSum = 0
