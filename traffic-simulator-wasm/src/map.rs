@@ -177,8 +177,8 @@ pub struct Road {
     fwd_lane: Lane,
     bck_lane: Lane,
 
-    p1: (u32, u32),
-    p2: (u32, u32),
+    pub p1: (u32, u32),
+    pub p2: (u32, u32),
 }
 
 impl Road {
