@@ -13,6 +13,12 @@ macro_rules! log {
     }
 }
 
+pub enum VehicleState {
+    Running,
+    Completed,
+    Unknown,
+}
+
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub struct VehicleId(pub u32);
@@ -45,9 +51,9 @@ impl Vehicle {
         }
     }
 
-    pub fn update(&mut self, map: &mut RoadMap, dt: f64) {
+    pub fn update(&mut self, map: &mut RoadMap, dt: f64) -> VehicleState {
         if self.curr_lane.is_none() {
-            return;
+            return VehicleState::Unknown;
         }
         let mut desired_vel = self.max_vel;
 
@@ -57,10 +63,12 @@ impl Vehicle {
         }
         let dv = desired_vel - self.vel;
         // let multiplier = if self.dir * dv > 0.0 { 1.0 } else { 20.0 };
-        // self.vel += self.acc * multiplier * (dv / self.acc).clamp(0.0, 1.0) * dt;
-        // self.vel = self.vel.clamp(0.0, self.max_vel);
+        self.vel += self.acc * (dv / 5.0).clamp(0.0, 1.0) * dt;
+        self.vel = self.vel.clamp(0.0, self.max_vel);
         // self.vel = self.dir * (pos - self.pos) / 20.0 * self.max_vel;
-        self.vel = desired_vel.clamp(0.0, self.max_vel);
+        if dv < 0.0 {
+            self.vel = desired_vel.clamp(0.0, self.max_vel);
+        }
         self.pos += self.dir * self.vel * dt;
 
         match map
@@ -82,6 +90,11 @@ impl Vehicle {
                 self.vel = 0.0;
                 self.infront_id = None;
                 self.infront_pos = None;
+
+                if rand::random::<f64>() < 0.25 {
+                    return VehicleState::Completed;
+                }
+
                 self.enter_road(
                     map,
                     &intersection_id,
@@ -96,6 +109,8 @@ impl Vehicle {
             }
             _ => {}
         }
+
+        VehicleState::Running
     }
 
     pub fn enter_road(&mut self, map: &mut RoadMap, int_id: &IntersectionId, road_id: &RoadId) {
@@ -201,9 +216,13 @@ impl Simulator {
     pub fn tick(&mut self, scale: f32) {
         let dt = 0.001 * scale;
         self.vehicle_render_buff.clear();
+        let mut remove_list = vec![];
         for (_, vehicle) in &mut self.vehicles {
             //(fixed dt per frame)
-            vehicle.update(&mut self.map, dt as f64);
+            if let VehicleState::Completed = vehicle.update(&mut self.map, dt as f64) {
+                remove_list.push(vehicle.id);
+                continue;
+            }
             self.vehicle_render_buff.push(vehicle.id.0 as f32);
             let pos = vehicle.pos;
             let road = self.map.roads.get(&vehicle.curr_lane.unwrap().0).unwrap();
@@ -216,6 +235,9 @@ impl Simulator {
             );
             self.vehicle_render_buff.push(x as f32);
             self.vehicle_render_buff.push(y as f32);
+        }
+        for id in remove_list {
+            self.vehicles.remove(&id);
         }
         for (_, road) in &mut self.map.roads {
             road.update()
