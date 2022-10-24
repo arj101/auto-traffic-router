@@ -1,10 +1,17 @@
 /* tslint:disable */
 /* eslint-disable */
 export const memory: WebAssembly.Memory;
-export function greet(): void;
 export function __wbg_statsmanager_free(a: number): void;
 export function __wbg_get_statsmanager_completed_vehicle_count(a: number): number;
 export function __wbg_set_statsmanager_completed_vehicle_count(a: number, b: number): void;
+export function __wbg_get_statsmanager_avg_flux(a: number): number;
+export function __wbg_set_statsmanager_avg_flux(a: number, b: number): void;
+export function __wbg_get_statsmanager_flux_avg_clear_threshold(a: number): number;
+export function __wbg_set_statsmanager_flux_avg_clear_threshold(a: number, b: number): void;
+export function __wbg_get_statsmanager_avg_vel(a: number): number;
+export function __wbg_set_statsmanager_avg_vel(a: number, b: number): void;
+export function __wbg_get_statsmanager_vel_avg_clear_threshold(a: number): number;
+export function __wbg_set_statsmanager_vel_avg_clear_threshold(a: number, b: number): void;
 export function __wbg_simulator_free(a: number): void;
 export function __wbg_get_simulator_stats(a: number): number;
 export function __wbg_set_simulator_stats(a: number, b: number): void;

@@ -211,7 +211,7 @@ impl Lane {
 
 pub struct Road {
     pub id: RoadId,
-    length: f64,
+    pub length: f64,
     cost_static: TravelCostStatic,
     cost_dynamic: TravelCostDynamic,
 

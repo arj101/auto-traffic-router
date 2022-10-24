@@ -1,5 +1,25 @@
 import * as wasm from './traffic_simulator_wasm_bg.wasm';
 
+const heap = new Array(32).fill(undefined);
+
+heap.push(undefined, null, true, false);
+
+function getObject(idx) { return heap[idx]; }
+
+let heap_next = heap.length;
+
+function dropObject(idx) {
+    if (idx < 36) return;
+    heap[idx] = heap_next;
+    heap_next = idx;
+}
+
+function takeObject(idx) {
+    const ret = getObject(idx);
+    dropObject(idx);
+    return ret;
+}
+
 const lTextDecoder = typeof TextDecoder === 'undefined' ? (0, module.require)('util').TextDecoder : TextDecoder;
 
 let cachedTextDecoder = new lTextDecoder('utf-8', { ignoreBOM: true, fatal: true });
@@ -19,12 +39,6 @@ function getStringFromWasm0(ptr, len) {
     return cachedTextDecoder.decode(getUint8Memory0().subarray(ptr, ptr + len));
 }
 
-const heap = new Array(32).fill(undefined);
-
-heap.push(undefined, null, true, false);
-
-let heap_next = heap.length;
-
 function addHeapObject(obj) {
     if (heap_next === heap.length) heap.push(heap.length + 1);
     const idx = heap_next;
@@ -32,25 +46,6 @@ function addHeapObject(obj) {
 
     heap[idx] = obj;
     return idx;
-}
-
-function getObject(idx) { return heap[idx]; }
-
-function dropObject(idx) {
-    if (idx < 36) return;
-    heap[idx] = heap_next;
-    heap_next = idx;
-}
-
-function takeObject(idx) {
-    const ret = getObject(idx);
-    dropObject(idx);
-    return ret;
-}
-/**
-*/
-export function greet() {
-    wasm.greet();
 }
 
 function _assertClass(instance, klass) {
@@ -252,20 +247,59 @@ export class StatsManager {
     set completed_vehicle_count(arg0) {
         wasm.__wbg_set_statsmanager_completed_vehicle_count(this.ptr, arg0);
     }
+    /**
+    * @returns {number}
+    */
+    get avg_flux() {
+        const ret = wasm.__wbg_get_statsmanager_avg_flux(this.ptr);
+        return ret;
+    }
+    /**
+    * @param {number} arg0
+    */
+    set avg_flux(arg0) {
+        wasm.__wbg_set_statsmanager_avg_flux(this.ptr, arg0);
+    }
+    /**
+    * @returns {number}
+    */
+    get flux_avg_clear_threshold() {
+        const ret = wasm.__wbg_get_statsmanager_flux_avg_clear_threshold(this.ptr);
+        return ret;
+    }
+    /**
+    * @param {number} arg0
+    */
+    set flux_avg_clear_threshold(arg0) {
+        wasm.__wbg_set_statsmanager_flux_avg_clear_threshold(this.ptr, arg0);
+    }
+    /**
+    * @returns {number}
+    */
+    get avg_vel() {
+        const ret = wasm.__wbg_get_statsmanager_avg_vel(this.ptr);
+        return ret;
+    }
+    /**
+    * @param {number} arg0
+    */
+    set avg_vel(arg0) {
+        wasm.__wbg_set_statsmanager_avg_vel(this.ptr, arg0);
+    }
+    /**
+    * @returns {number}
+    */
+    get vel_avg_clear_threshold() {
+        const ret = wasm.__wbg_get_statsmanager_vel_avg_clear_threshold(this.ptr);
+        return ret;
+    }
+    /**
+    * @param {number} arg0
+    */
+    set vel_avg_clear_threshold(arg0) {
+        wasm.__wbg_set_statsmanager_vel_avg_clear_threshold(this.ptr, arg0);
+    }
 }
-
-export function __wbindgen_string_new(arg0, arg1) {
-    const ret = getStringFromWasm0(arg0, arg1);
-    return addHeapObject(ret);
-};
-
-export function __wbg_alert_ba459ff1338f3c74(arg0, arg1) {
-    alert(getStringFromWasm0(arg0, arg1));
-};
-
-export function __wbindgen_object_drop_ref(arg0) {
-    takeObject(arg0);
-};
 
 export function __wbg_new_abda76e883ba8a5f() {
     const ret = new Error();
@@ -288,8 +322,8 @@ export function __wbg_error_f851667af71bcfc6(arg0, arg1) {
     }
 };
 
-export function __wbg_log_4b5638ad60bdc54a(arg0) {
-    console.log(getObject(arg0));
+export function __wbindgen_object_drop_ref(arg0) {
+    takeObject(arg0);
 };
 
 export function __wbg_crypto_e1d53a1d73fb10b8(arg0) {
@@ -327,6 +361,11 @@ export function __wbg_require_78a3dcfbdba9cbce() { return handleError(function (
     const ret = module.require;
     return addHeapObject(ret);
 }, arguments) };
+
+export function __wbindgen_string_new(arg0, arg1) {
+    const ret = getStringFromWasm0(arg0, arg1);
+    return addHeapObject(ret);
+};
 
 export function __wbg_msCrypto_6e7d3e1f92610cbb(arg0) {
     const ret = getObject(arg0).msCrypto;

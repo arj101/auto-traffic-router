@@ -1,4 +1,7 @@
-use std::collections::HashMap;
+use std::{
+    collections::{HashMap, VecDeque},
+    time::Instant,
+};
 
 use rand::seq::{IteratorRandom, SliceRandom};
 use wasm_bindgen::prelude::*;
@@ -37,6 +40,9 @@ pub struct Vehicle {
 
     pub start_node: IntersectionId,
     pub target_node: IntersectionId,
+
+    pub frame_count: usize,
+    pub travelled_distance: f64,
 }
 
 impl Vehicle {
@@ -60,6 +66,9 @@ impl Vehicle {
 
             start_node,
             target_node,
+
+            frame_count: 0,
+            travelled_distance: 0.0,
         };
 
         let (cost, road_id) = map.best_direction(start_node, target_node, None);
@@ -72,6 +81,8 @@ impl Vehicle {
         if self.curr_lane.is_none() {
             return VehicleState::Unknown;
         }
+        self.frame_count += 1;
+
         let mut desired_vel = self.max_vel;
 
         if let Some(pos) = self.infront_pos {
@@ -102,6 +113,8 @@ impl Vehicle {
                 self.infront_pos = infront_pos;
             }
             VehicleUpdate::ExitResponse { intersection_id } => {
+                self.travelled_distance +=
+                    map.roads.get(&self.curr_lane.unwrap().0).unwrap().length;
                 if intersection_id == self.target_node {
                     return VehicleState::Completed;
                 }
@@ -160,17 +173,62 @@ fn dist(x1: u32, y1: u32, x2: u32, y2: u32) -> f64 {
 #[derive(Clone, Copy)]
 pub struct StatsManager {
     pub completed_vehicle_count: usize,
+
+    pub avg_flux: f64,
+    pub flux_avg_clear_threshold: f64,
+    flux_sum: f64,
+    flux_n: f64,
+
+    pub avg_vel: f64,
+    pub vel_avg_clear_threshold: f64,
+    vel_sum: f64,
+    vel_n: f64,
+
+    last_flow_frame: usize,
+    frame_count: usize,
 }
 
 impl StatsManager {
     pub fn new() -> Self {
         Self {
             completed_vehicle_count: 0,
+            avg_flux: 0.0,
+            last_flow_frame: 0,
+            frame_count: 0,
+            flux_sum: 0.0,
+            flux_n: 0.0,
+            flux_avg_clear_threshold: 10000.0,
+
+            avg_vel: 0.0,
+            vel_sum: 0.0,
+            vel_n: 0.0,
+            vel_avg_clear_threshold: 10000.0,
         }
     }
 
-    pub fn incr_vehicle_count(&mut self) {
+    pub fn tick(&mut self) {
+        self.frame_count += 1;
+    }
+
+    pub fn update_from_vehicle(&mut self, vehicle: Vehicle) {
         self.completed_vehicle_count += 1;
+        let flux = 1.0 / (self.frame_count - self.last_flow_frame) as f64;
+        self.flux_sum += flux;
+        self.flux_n += 1.0;
+        self.avg_flux = self.flux_sum / self.flux_n;
+
+        self.vel_sum += vehicle.travelled_distance / vehicle.frame_count as f64;
+        self.vel_n += 1.0;
+        self.avg_vel = self.vel_sum / self.vel_n;
+
+        if self.flux_n > self.flux_avg_clear_threshold {
+            self.flux_sum = 0.0;
+            self.flux_n = 0.0;
+        }
+        if self.vel_n > self.vel_avg_clear_threshold {
+            self.vel_sum = 0.0;
+            self.vel_n = 0.0;
+        }
     }
 
     pub fn reset(&mut self) {
@@ -254,12 +312,12 @@ impl Simulator {
         let (density_coeff, vel_coeff) = (density_coeff.clone(), vel_coeff.clone());
         let dt = 0.001 * scale;
         self.vehicle_render_buff.clear();
+        self.stats.tick();
         let mut remove_list = vec![];
         for (_, vehicle) in &mut self.vehicles {
             //(fixed dt per frame)
             if let VehicleState::Completed = vehicle.update(&mut self.map, dt as f64) {
                 remove_list.push(vehicle.id);
-                self.stats.incr_vehicle_count();
                 continue;
             }
             self.vehicle_render_buff.push(vehicle.id.0 as f32);
@@ -276,7 +334,9 @@ impl Simulator {
             self.vehicle_render_buff.push(y as f32);
         }
         for id in remove_list {
-            self.vehicles.remove(&id);
+            if let Some(v) = self.vehicles.remove(&id) {
+                self.stats.update_from_vehicle(v)
+            }
         }
         for (_, road) in &mut self.map.roads {
             road.update(&mut self.vehicles, density_coeff, vel_coeff)

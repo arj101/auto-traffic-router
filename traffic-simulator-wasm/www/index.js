@@ -99,6 +99,8 @@ const renderLoop = () => {
     ctx.fillStyle = 'rgb(255, 255, 255)'
     ctx.font = '14px Fira Code'
     ctx.fillText(`vehicle count: ${sim.stats.completed_vehicle_count}`, 20, 20);
+    ctx.fillText(`flux: ${sim.stats.avg_flux}`, 20, 40);
+    ctx.fillText(`speed: ${sim.stats.avg_vel}`, 20, 60);
     ctx.fill()
 
     requestAnimationFrame(renderLoop)

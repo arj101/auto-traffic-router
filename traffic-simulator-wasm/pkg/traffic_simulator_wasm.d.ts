@@ -2,9 +2,6 @@
 /* eslint-disable */
 /**
 */
-export function greet(): void;
-/**
-*/
 export class Simulator {
   free(): void;
 /**
@@ -42,5 +39,17 @@ export class StatsManager {
   free(): void;
 /**
 */
+  avg_flux: number;
+/**
+*/
+  avg_vel: number;
+/**
+*/
   completed_vehicle_count: number;
+/**
+*/
+  flux_avg_clear_threshold: number;
+/**
+*/
+  vel_avg_clear_threshold: number;
 }
