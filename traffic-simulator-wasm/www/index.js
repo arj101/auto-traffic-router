@@ -19,9 +19,28 @@ const ctx = canvas.getContext('2d')
 
 sim.spawn_vehicles();
 
+let velCoeff = 0;
+let densityCoeff = 0;
+
+const densitySlider = document.getElementById('density')
+const velocitySlider = document.getElementById('velocity')
+velCoeff = parseFloat(velocitySlider.value)
+densityCoeff = parseFloat(densitySlider.value);
+
+densitySlider.onchange = () => {
+    console.log(densitySlider.value)
+    densityCoeff = parseFloat(densitySlider.value);
+
+}
+
+
+velocitySlider.onchange = () => {
+    console.log(velocitySlider.value)
+    velCoeff = parseFloat(velocitySlider.value)
+
+}
 
 const renderLoop = () => {
-    requestAnimationFrame(renderLoop)
     if (Math.random() < 0.01) { sim.spawn_vehicles() }
 
     ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -59,7 +78,7 @@ const renderLoop = () => {
     }
 
 
-    sim.tick(10)
+    sim.tick(10, densityCoeff, velCoeff)
 
     const buffLen = sim.get_vehicle_render_buff_len();
     const buffPtr = sim.get_vehicle_render_buff_ptr();
@@ -77,6 +96,8 @@ const renderLoop = () => {
         i += 3
     }
 
+    requestAnimationFrame(renderLoop)
+
 }
 
-renderLoop()
+requestAnimationFrame(renderLoop)

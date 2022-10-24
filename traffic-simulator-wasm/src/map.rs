@@ -70,6 +70,7 @@ pub enum VehicleUpdate {
 pub struct Lane {
     pub id: LaneId,
     length: f64,
+    pub dynamic_cost: f64,
     dir: f64,
     start_pos: f64,
     end_pos: f64,
@@ -92,6 +93,7 @@ impl Lane {
             lane: vec![],
             infront_map: HashMap::new(),
             lane_buff: vec![],
+            dynamic_cost: 0.0,
         }
     }
 
@@ -151,7 +153,12 @@ impl Lane {
         }
     }
 
-    pub fn update(&mut self) {
+    pub fn update(
+        &mut self,
+        vehicles: &HashMap<VehicleId, Vehicle>,
+        density_coeff: f64,
+        vel_coeff: f64,
+    ) {
         let dir = self.dir.clone();
         self.lane_buff
             .sort_unstable_by(|(_, a), (_, b)| (dir * a).partial_cmp(&(dir * b)).unwrap());
@@ -165,6 +172,40 @@ impl Lane {
             .filter(|(_, infront)| infront.is_some())
             .map(|(id, infront)| (*id, *infront.unwrap()))
             .collect();
+        self.update_dynamic_cost(vehicles, density_coeff, vel_coeff);
+    }
+
+    fn update_dynamic_cost(
+        &mut self,
+        vehicles: &HashMap<VehicleId, Vehicle>,
+        density_coeff: f64,
+        vel_coeff: f64,
+    ) {
+        let density_term = density_coeff * self.lane.len() as f64 / self.length;
+
+        let mut vel_n = 0;
+        let mut avg_vel = 0.0;
+        for (id, _) in &self.lane {
+            if let Some(v) = vehicles.get(id) {
+                avg_vel += v.vel;
+                vel_n += 1;
+            }
+        }
+
+        let avg_vel = if vel_n > 0 {
+            avg_vel / vel_n as f64
+        } else {
+            0.0
+        };
+
+        let inv_velocity_term = density_term * vel_coeff / (10e-2 + avg_vel);
+        let inv_velocity_term = if avg_vel > 0.0 {
+            inv_velocity_term
+        } else {
+            0.0
+        };
+
+        self.dynamic_cost = density_term + inv_velocity_term;
     }
 }
 
@@ -250,9 +291,16 @@ impl Road {
         }
     }
 
-    pub fn update(&mut self) {
-        self.fwd_lane.update();
-        self.bck_lane.update();
+    pub fn update(
+        &mut self,
+        vehicles: &HashMap<VehicleId, Vehicle>,
+        density_coeff: f64,
+        vel_coeff: f64,
+    ) {
+        self.fwd_lane.update(vehicles, density_coeff, vel_coeff);
+        self.cost_dynamic.0 = self.fwd_lane.dynamic_cost;
+        self.bck_lane.update(vehicles, density_coeff, vel_coeff);
+        self.cost_dynamic.1 = self.bck_lane.dynamic_cost;
     }
 }
 

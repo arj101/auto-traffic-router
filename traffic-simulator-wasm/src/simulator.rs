@@ -34,21 +34,38 @@ pub struct Vehicle {
     pub acc: f64,
     pub infront_id: Option<VehicleId>,
     pub infront_pos: Option<f64>,
+
+    pub start_node: IntersectionId,
+    pub target_node: IntersectionId,
 }
 
 impl Vehicle {
-    pub fn new(id: VehicleId) -> Self {
-        Self {
+    pub fn new(
+        id: VehicleId,
+        map: &mut RoadMap,
+        start_node: IntersectionId,
+        target_node: IntersectionId,
+    ) -> Self {
+        crate::utils::set_panic_hook();
+        let mut vehicle = Self {
             id,
             curr_lane: None,
             max_vel: 50.0 + rand::random::<f64>() * 50.0,
             dir: 0.0,
-            vel: 10.0,
+            vel: 0.0,
             pos: 0.0,
             acc: 5.0 + rand::random::<f64>() * 5.0,
             infront_id: None,
             infront_pos: None,
-        }
+
+            start_node,
+            target_node,
+        };
+
+        let (cost, road_id) = map.best_direction(start_node, target_node, None);
+        vehicle.enter_road(map, &start_node, &road_id.unwrap());
+
+        vehicle
     }
 
     pub fn update(&mut self, map: &mut RoadMap, dt: f64) -> VehicleState {
@@ -85,27 +102,22 @@ impl Vehicle {
                 self.infront_pos = infront_pos;
             }
             VehicleUpdate::ExitResponse { intersection_id } => {
+                if intersection_id == self.target_node {
+                    return VehicleState::Completed;
+                }
+
+                let (_, road_id) = map.best_direction(
+                    intersection_id,
+                    self.target_node,
+                    Some(&self.curr_lane.unwrap().0),
+                );
                 self.curr_lane = None;
                 self.dir = 0.0;
                 self.vel = 0.0;
                 self.infront_id = None;
                 self.infront_pos = None;
 
-                if rand::random::<f64>() < 0.25 {
-                    return VehicleState::Completed;
-                }
-
-                self.enter_road(
-                    map,
-                    &intersection_id,
-                    &map.intersections
-                        .get(&intersection_id)
-                        .unwrap()
-                        .roads
-                        .clone()
-                        .choose(&mut rand::thread_rng())
-                        .unwrap(),
-                )
+                self.enter_road(map, &intersection_id, &road_id.unwrap())
             }
             _ => {}
         }
@@ -191,29 +203,31 @@ impl Simulator {
 
     pub fn spawn_vehicles(&mut self) {
         for _ in 0..5 {
-            let mut vehicle = Vehicle::new(VehicleId(self.vehicle_count));
+            let nodes = self
+                .map
+                .intersections
+                .keys()
+                .choose_multiple(&mut rand::thread_rng(), 2);
+            let start_node = *nodes.get(0).expect("start node").clone();
+            let target_node = *nodes.get(1).expect("target node").clone();
 
-            let road_id;
-            let int_id;
+            let start_node = IntersectionId(1);
+            let target_node = IntersectionId(2);
 
-            {
-                let int = self
-                    .map
-                    .intersections
-                    .values()
-                    .choose(&mut rand::thread_rng())
-                    .unwrap();
-                int_id = int.id.clone();
-                road_id = int.roads.choose(&mut rand::thread_rng()).unwrap().clone();
-            }
+            let vehicle = Vehicle::new(
+                VehicleId(self.vehicle_count),
+                &mut self.map,
+                start_node,
+                target_node,
+            );
 
-            vehicle.enter_road(&mut self.map, &int_id, &road_id);
             self.vehicles.insert(vehicle.id, vehicle);
             self.vehicle_count += 1;
         }
     }
 
-    pub fn tick(&mut self, scale: f32) {
+    pub fn tick(&mut self, scale: f32, density_coeff: f64, vel_coeff: f64) {
+        let (density_coeff, vel_coeff) = (density_coeff.clone(), vel_coeff.clone());
         let dt = 0.001 * scale;
         self.vehicle_render_buff.clear();
         let mut remove_list = vec![];
@@ -240,7 +254,7 @@ impl Simulator {
             self.vehicles.remove(&id);
         }
         for (_, road) in &mut self.map.roads {
-            road.update()
+            road.update(&mut self.vehicles, density_coeff, vel_coeff)
         }
     }
 
