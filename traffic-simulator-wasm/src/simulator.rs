@@ -157,11 +157,34 @@ fn dist(x1: u32, y1: u32, x2: u32, y2: u32) -> f64 {
 }
 
 #[wasm_bindgen]
+#[derive(Clone, Copy)]
+pub struct StatsManager {
+    pub completed_vehicle_count: usize,
+}
+
+impl StatsManager {
+    pub fn new() -> Self {
+        Self {
+            completed_vehicle_count: 0,
+        }
+    }
+
+    pub fn incr_vehicle_count(&mut self) {
+        self.completed_vehicle_count += 1;
+    }
+
+    pub fn reset(&mut self) {
+        self.completed_vehicle_count = 0;
+    }
+}
+
+#[wasm_bindgen]
 pub struct Simulator {
     vehicles: HashMap<VehicleId, Vehicle>,
     map: RoadMap,
     vehicle_count: u32,
     vehicle_render_buff: Vec<f32>,
+    pub stats: StatsManager,
 }
 
 #[wasm_bindgen]
@@ -198,6 +221,7 @@ impl Simulator {
             map,
             vehicle_count: 0,
             vehicle_render_buff: vec![],
+            stats: StatsManager::new(),
         }
     }
 
@@ -235,6 +259,7 @@ impl Simulator {
             //(fixed dt per frame)
             if let VehicleState::Completed = vehicle.update(&mut self.map, dt as f64) {
                 remove_list.push(vehicle.id);
+                self.stats.incr_vehicle_count();
                 continue;
             }
             self.vehicle_render_buff.push(vehicle.id.0 as f32);
