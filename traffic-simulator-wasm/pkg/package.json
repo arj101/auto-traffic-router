@@ -1,0 +1,16 @@
+{
+  "name": "traffic-simulator-wasm",
+  "collaborators": [
+    "arduino explorer <arjunanmr101@gmail.com>"
+  ],
+  "version": "0.1.0",
+  "files": [
+    "traffic_simulator_wasm_bg.wasm",
+    "traffic_simulator_wasm.js",
+    "traffic_simulator_wasm_bg.js",
+    "traffic_simulator_wasm.d.ts"
+  ],
+  "module": "traffic_simulator_wasm.js",
+  "types": "traffic_simulator_wasm.d.ts",
+  "sideEffects": false
+}

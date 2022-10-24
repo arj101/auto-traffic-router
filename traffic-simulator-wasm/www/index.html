@@ -7,7 +7,10 @@
   <body>
     <noscript>This page contains webassembly and javascript content, please enable javascript in your browser.</noscript>
     <canvas width = "640" height = "480"></canvas>
+    <h3>Sensitivity settings</h3>
+    <label for="density">Density: </label>
     <input type="range" name="density coeff" id="density">
+    <label for="velocity">Speed: </label>
     <input type="range" name="velocity coeff" id="velocity">
     <script src="./bootstrap.js"></script>
     <style>
@@ -16,6 +19,8 @@
         margin: 0;
         border: 0;
         background-color: rgb(20, 20, 20);
+        font-family: sans-serif;
+        color: white;
       }
 
     </style>
