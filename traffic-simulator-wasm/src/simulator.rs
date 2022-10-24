@@ -25,6 +25,7 @@ pub struct Vehicle {
     pub vel: f64,
     pub dir: f64,
     pub pos: f64,
+    pub acc: f64,
     pub infront_id: Option<VehicleId>,
     pub infront_pos: Option<f64>,
 }
@@ -34,10 +35,11 @@ impl Vehicle {
         Self {
             id,
             curr_lane: None,
-            max_vel: 50.0,
+            max_vel: 50.0 + rand::random::<f64>() * 50.0,
             dir: 0.0,
             vel: 10.0,
             pos: 0.0,
+            acc: 5.0 + rand::random::<f64>() * 5.0,
             infront_id: None,
             infront_pos: None,
         }
@@ -47,7 +49,18 @@ impl Vehicle {
         if self.curr_lane.is_none() {
             return;
         }
+        let mut desired_vel = self.max_vel;
 
+        if let Some(pos) = self.infront_pos {
+            // desired_vel = self.dir * (pos - self.pos) / 10.0 * self.max_vel;
+            desired_vel = self.dir * (pos - self.pos) / 10.0 * self.max_vel;
+        }
+        let dv = desired_vel - self.vel;
+        // let multiplier = if self.dir * dv > 0.0 { 1.0 } else { 20.0 };
+        // self.vel += self.acc * multiplier * (dv / self.acc).clamp(0.0, 1.0) * dt;
+        // self.vel = self.vel.clamp(0.0, self.max_vel);
+        // self.vel = self.dir * (pos - self.pos) / 20.0 * self.max_vel;
+        self.vel = desired_vel.clamp(0.0, self.max_vel);
         self.pos += self.dir * self.vel * dt;
 
         match map
@@ -66,6 +79,7 @@ impl Vehicle {
             VehicleUpdate::ExitResponse { intersection_id } => {
                 self.curr_lane = None;
                 self.dir = 0.0;
+                self.vel = 0.0;
                 self.infront_id = None;
                 self.infront_pos = None;
                 self.enter_road(
@@ -103,6 +117,7 @@ impl Vehicle {
                 self.curr_lane = Some(LaneId(*road_id, if dir > 0.0 { 0 } else { 1 }));
                 self.dir = dir;
                 self.pos = pos;
+                self.vel = self.max_vel;
             }
             _ => {}
         }
@@ -111,7 +126,7 @@ impl Vehicle {
 
 fn dist(x1: u32, y1: u32, x2: u32, y2: u32) -> f64 {
     let (x1, y1, x2, y2) = (x1 as f64, y1 as f64, x2 as f64, y2 as f64);
-    ((x2 - x1).powi(2) + (y2 - y1).powi(2)).sqrt().round()
+    ((x2 - x1).powi(2) + (y2 - y1).powi(2)).sqrt()
 }
 
 #[wasm_bindgen]

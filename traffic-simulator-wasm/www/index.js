@@ -7,13 +7,13 @@ const sim = wasm.Simulator.new();
 const mapRenderData = sim.get_map_render_data();
 
 const canvas = document.getElementsByTagName('canvas')[0]
-canvas.width = window.innerWidth - 5;
-canvas.height = window.innerHeight - 5;
+// canvas.width = window.innerWidth - 5;
+// canvas.height = window.innerHeight - 5;
 
-window.onresize = () => {
-    canvas.width = window.innerWidth - 5;
-    canvas.height = window.innerHeight - 5;
-}
+// window.onresize = () => {
+//     canvas.width = window.innerWidth - 5;
+//     canvas.height = window.innerHeight - 5;
+// }
 
 const ctx = canvas.getContext('2d')
 
@@ -22,7 +22,7 @@ sim.spawn_vehicles();
 
 const renderLoop = () => {
     requestAnimationFrame(renderLoop)
-    if (Math.random() < 0.25) { sim.spawn_vehicles() }
+    if (Math.random() < 0.01) { sim.spawn_vehicles() }
 
     ctx.clearRect(0, 0, canvas.width, canvas.height)
     ctx.fillStyle = 'rgb(30, 30,30)'
@@ -59,7 +59,7 @@ const renderLoop = () => {
     }
 
 
-    sim.tick(50)
+    sim.tick(10)
 
     const buffLen = sim.get_vehicle_render_buff_len();
     const buffPtr = sim.get_vehicle_render_buff_ptr();
