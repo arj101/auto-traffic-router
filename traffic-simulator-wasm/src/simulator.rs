@@ -309,9 +309,10 @@ impl Simulator {
             let p1 = road.p1;
             let p2 = road.p2;
             let theta = (p2.1 as f64 - p1.1 as f64).atan2(p2.0 as f64 - p1.0 as f64);
+            use std::f64::consts::FRAC_PI_2;
             let (x, y) = (
-                p1.0 as f64 + pos * theta.cos() + vehicle.dir * 4.0 * theta.cos(),
-                p1.1 as f64 + pos * theta.sin() - vehicle.dir * 4.0 * theta.sin(),
+                p1.0 as f64 + pos * theta.cos() - vehicle.dir * 4.0 * (theta + FRAC_PI_2).cos(),
+                p1.1 as f64 + pos * theta.sin() - vehicle.dir * 4.0 * (theta + FRAC_PI_2).sin(),
             );
             self.vehicle_render_buff.push(x as f32);
             self.vehicle_render_buff.push(y as f32);

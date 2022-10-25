@@ -79,7 +79,7 @@ const spawnRateSlider = document.getElementById('spawn-rate')
 const spawnRateSpan = document.getElementById('spawn-rate-display')
 velCoeff = parseFloat(velocitySlider.value)
 densityCoeff = parseFloat(densitySlider.value);
-spawnRate = parseFloat(spawnRateSlider.value) / 100
+spawnRate = parseFloat(spawnRateSlider.value) / 200
 spawnRateSpan.textContent = `${spawnRate.toFixed(3)}`
 
 densitySlider.onchange = () => {
@@ -93,7 +93,7 @@ velocitySlider.onchange = () => {
 }
 
 spawnRateSlider.onchange = () => {
-    spawnRate = parseFloat(spawnRateSlider.value) / 100
+    spawnRate = parseFloat(spawnRateSlider.value) / 200
     spawnRateSpan.textContent = `${spawnRate.toFixed(3)}`
 }
 
