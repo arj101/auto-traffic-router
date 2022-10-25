@@ -10,28 +10,49 @@ const idMap = new Map();
 const createMap = (mapData) => {
     let idCounter = 0;
     for (const intersection of mapData.intersections) {
-        let name = intersection.id;
+        let name;
         let id = idCounter;
+        let x, y;
+
+        if (Array.isArray(intersection)) {
+            name = intersection[0]
+            x = intersection[1]
+            y = intersection[2]
+        } else {
+            name = intersection.id;
+            x = intersection.pos[0]
+            y = intersection.pos[1]
+        }
+
+        if (!(typeof x == 'number' && typeof y == 'number' && typeof name == 'string')) continue;
+
         nameMap.set(name, id)
         idMap.set(id, name)
 
 
-        sim.create_intersection(id, intersection.pos[0], intersection.pos[1])
+        sim.create_intersection(id, x, y)
         idCounter += 1;
     }
 
     for (const road of mapData.roads) {
-        if (nameMap.has(road.n1) && nameMap.has(road.n2)) {
-            sim.create_road(nameMap.get(road.n1), nameMap.get(road.n2))
+        let n1, n2;
+        if (Array.isArray(road)) {
+            n1 = road[0]
+            n2 = road[1]
+        } else {
+            n1 = road.n1;
+            n2 = road.n2;
+        }
+        if (!(typeof n1 == 'string' && typeof n2 == 'string')) continue;
+        if (nameMap.has(n1) && nameMap.has(n2)) {
+            sim.create_road(nameMap.get(n1), nameMap.get(n2))
         }
     }
 
 }
 
 createMap(mapData)
-// sim.create_intersection(8, 100, 100)
-// sim.create_intersection(10, 300, 300)
-// sim.create_road(8, 10)
+
 
 const mapRenderData = sim.get_map_render_data();
 
@@ -49,27 +70,35 @@ const ctx = canvas.getContext('2d')
 
 let velCoeff = 0;
 let densityCoeff = 0;
+let spawnRate = 0;
 
 const densitySlider = document.getElementById('density')
 const velocitySlider = document.getElementById('velocity')
+const spawnRateSlider = document.getElementById('spawn-rate')
+const spawnRateSpan = document.getElementById('spawn-rate-display')
 velCoeff = parseFloat(velocitySlider.value)
 densityCoeff = parseFloat(densitySlider.value);
+spawnRate = parseFloat(spawnRateSlider.value) / 100
+spawnRateSpan.textContent = `${spawnRate.toFixed(3)}`
 
 densitySlider.onchange = () => {
-    console.log(densitySlider.value)
     densityCoeff = parseFloat(densitySlider.value);
 
 }
 
-
 velocitySlider.onchange = () => {
-    console.log(velocitySlider.value)
     velCoeff = parseFloat(velocitySlider.value)
 
 }
 
+spawnRateSlider.onchange = () => {
+    spawnRate = parseFloat(spawnRateSlider.value) / 100
+    spawnRateSpan.textContent = `${spawnRate.toFixed(3)}`
+}
+
+
 const renderLoop = () => {
-    if (Math.random() < 0.02) { sim.spawn_vehicles() }
+    if (Math.random() < spawnRate) { sim.spawn_vehicles() }
 
     ctx.clearRect(0, 0, canvas.width, canvas.height)
     ctx.fillStyle = 'rgb(30, 30,30)'

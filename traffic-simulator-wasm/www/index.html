@@ -7,11 +7,19 @@
   <body>
     <noscript>This page contains webassembly and javascript content, please enable javascript in your browser.</noscript>
     <canvas width = "640" height = "480"></canvas>
+
+    <br>
+    <br>
     <h3>Sensitivity settings</h3>
     <label for="density">Density: </label>
     <input type="range" name="density coeff" id="density">
     <label for="velocity">Speed: </label>
     <input type="range" name="velocity coeff" id="velocity">
+    <br>
+    <br>
+    <h3>Other settings</h3>
+    <label for="spawn-rate">Vehicle spawn rate [<span id="spawn-rate-display"></span>]:</label>
+    <input type="range" name="spawn-rate" id="spawn-rate" min="0" max="100">
     <script src="./map-data.js"></script>
     <script src="./bootstrap.js"></script>
     <style>
