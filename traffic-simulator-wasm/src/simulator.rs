@@ -279,11 +279,10 @@ impl Simulator {
                 .choose_multiple_weighted(&mut rand::thread_rng(), 2, |i| {
                     *self.node_weight_map.get(i).unwrap_or(&0.0)
                 })
-                .unwrap()
-                .collect::<Vec<&IntersectionId>>();
-            nodes.shuffle(&mut rand::thread_rng());
-            let start_node = *nodes.get(0).expect("start node").clone();
-            let target_node = *nodes.get(1).expect("target node").clone();
+                .unwrap();
+
+            let start_node = nodes.next().expect("start node").clone();
+            let target_node = nodes.next().expect("target node").clone();
 
             // let start_node = IntersectionId(1);
             // let target_node = IntersectionId(2);
