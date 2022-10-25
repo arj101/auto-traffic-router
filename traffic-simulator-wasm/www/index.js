@@ -4,6 +4,35 @@ import { memory } from "traffic-simulator-wasm/traffic_simulator_wasm_bg";
 
 const sim = wasm.Simulator.new();
 
+const nameMap = new Map();
+const idMap = new Map();
+
+const createMap = (mapData) => {
+    let idCounter = 0;
+    for (const intersection of mapData.intersections) {
+        let name = intersection.id;
+        let id = idCounter;
+        nameMap.set(name, id)
+        idMap.set(id, name)
+
+
+        sim.create_intersection(id, intersection.pos[0], intersection.pos[1])
+        idCounter += 1;
+    }
+
+    for (const road of mapData.roads) {
+        if (nameMap.has(road.n1) && nameMap.has(road.n2)) {
+            sim.create_road(nameMap.get(road.n1), nameMap.get(road.n2))
+        }
+    }
+
+}
+
+createMap(mapData)
+// sim.create_intersection(8, 100, 100)
+// sim.create_intersection(10, 300, 300)
+// sim.create_road(8, 10)
+
 const mapRenderData = sim.get_map_render_data();
 
 const canvas = document.getElementsByTagName('canvas')[0]
@@ -17,7 +46,6 @@ const canvas = document.getElementsByTagName('canvas')[0]
 
 const ctx = canvas.getContext('2d')
 
-sim.spawn_vehicles();
 
 let velCoeff = 0;
 let densityCoeff = 0;

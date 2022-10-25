@@ -253,35 +253,9 @@ pub struct Simulator {
 #[wasm_bindgen]
 impl Simulator {
     pub fn new() -> Self {
-        let mut map = RoadMap::new();
-        map.create_intersection(IntersectionId(1), (100, 100));
-        map.create_intersection(IntersectionId(2), (300, 300));
-        map.create_intersection(IntersectionId(3), (200, 150));
-        map.create_intersection(IntersectionId(4), (200, 250));
-
-        map.create_road(
-            IntersectionId(1),
-            IntersectionId(3),
-            dist(100, 100, 200, 150),
-        );
-        map.create_road(
-            IntersectionId(1),
-            IntersectionId(4),
-            dist(100, 100, 200, 250),
-        );
-        map.create_road(
-            IntersectionId(3),
-            IntersectionId(2),
-            dist(300, 300, 200, 150),
-        );
-        map.create_road(
-            IntersectionId(4),
-            IntersectionId(2),
-            dist(300, 300, 200, 250),
-        );
         Self {
             vehicles: HashMap::new(),
-            map,
+            map: RoadMap::new(),
             vehicle_count: 0,
             vehicle_render_buff: vec![],
             stats: StatsManager::new(),
@@ -289,12 +263,16 @@ impl Simulator {
     }
 
     pub fn spawn_vehicles(&mut self) {
+        if self.map.intersections.len() <= 1 {
+            return;
+        }
         for _ in 0..5 {
-            let nodes = self
+            let mut nodes = self
                 .map
                 .intersections
                 .keys()
                 .choose_multiple(&mut rand::thread_rng(), 2);
+            nodes.shuffle(&mut rand::thread_rng());
             let start_node = *nodes.get(0).expect("start node").clone();
             let target_node = *nodes.get(1).expect("target node").clone();
 
@@ -330,7 +308,7 @@ impl Simulator {
             let road = self.map.roads.get(&vehicle.curr_lane.unwrap().0).unwrap();
             let p1 = road.p1;
             let p2 = road.p2;
-            let theta = ((p2.1 - p1.1) as f64).atan2((p2.0 - p1.0) as f64);
+            let theta = (p2.1 as f64 - p1.1 as f64).atan2(p2.0 as f64 - p1.0 as f64);
             let (x, y) = (
                 p1.0 as f64 + pos * theta.cos() + vehicle.dir * 4.0 * theta.cos(),
                 p1.1 as f64 + pos * theta.sin() - vehicle.dir * 4.0 * theta.sin(),
