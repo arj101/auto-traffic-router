@@ -210,10 +210,13 @@ impl StatsManager {
         self.frame_count += 1;
     }
 
+    pub fn update_last_flow_frame(&mut self) {
+        self.last_flow_frame = self.frame_count;
+    }
+
     pub fn update_from_vehicle(&mut self, vehicle: Vehicle) {
         self.completed_vehicle_count += 1;
         let flux = 1.0 / (self.frame_count - self.last_flow_frame) as f64;
-        self.last_flow_frame = self.frame_count;
         self.flux_sum += flux;
         self.flux_n += 1.0;
         self.avg_flux = self.flux_sum / self.flux_n;
@@ -334,10 +337,13 @@ impl Simulator {
             self.vehicle_render_buff.push(x as f32);
             self.vehicle_render_buff.push(y as f32);
         }
-        for id in remove_list {
+        for id in &remove_list {
             if let Some(v) = self.vehicles.remove(&id) {
                 self.stats.update_from_vehicle(v)
             }
+        }
+        if remove_list.len() > 0 {
+            self.stats.update_last_flow_frame()
         }
         for (_, road) in &mut self.map.roads {
             road.update(&mut self.vehicles, density_coeff, vel_coeff)
