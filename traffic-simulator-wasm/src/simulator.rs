@@ -213,6 +213,7 @@ impl StatsManager {
     pub fn update_from_vehicle(&mut self, vehicle: Vehicle) {
         self.completed_vehicle_count += 1;
         let flux = 1.0 / (self.frame_count - self.last_flow_frame) as f64;
+        self.last_flow_frame = self.frame_count;
         self.flux_sum += flux;
         self.flux_n += 1.0;
         self.avg_flux = self.flux_sum / self.flux_n;
