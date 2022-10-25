@@ -167,3 +167,4 @@ const map4 = {
 }
 
 const mapData = map4
+module.exports = mapData;

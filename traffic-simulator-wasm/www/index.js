@@ -1,5 +1,6 @@
 import * as wasm from "traffic-simulator-wasm";
 import { memory } from "traffic-simulator-wasm/traffic_simulator_wasm_bg";
+import mapData from "./map-data"
 
 
 const sim = wasm.Simulator.new();
