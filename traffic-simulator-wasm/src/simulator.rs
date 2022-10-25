@@ -56,11 +56,11 @@ impl Vehicle {
         let mut vehicle = Self {
             id,
             curr_lane: None,
-            max_vel: 50.0 + rand::random::<f64>() * 50.0,
+            max_vel: 50.0 + rand::random::<f64>() * 100.0,
             dir: 0.0,
             vel: 0.0,
             pos: 0.0,
-            acc: 5.0 + rand::random::<f64>() * 5.0,
+            acc: 20.0 + rand::random::<f64>() * 40.0,
             infront_id: None,
             infront_pos: None,
 
@@ -72,7 +72,7 @@ impl Vehicle {
         };
         vehicle.vel = vehicle.max_vel;
 
-        let (cost, road_id) = map.best_direction(start_node, target_node, None);
+        let (_, road_id) = map.best_direction(start_node, target_node, None);
         vehicle.enter_road(map, &start_node, &road_id.unwrap());
 
         vehicle
@@ -88,12 +88,17 @@ impl Vehicle {
 
         if let Some(pos) = self.infront_pos {
             // desired_vel = self.dir * (pos - self.pos) / 10.0 * self.max_vel;
-            desired_vel = self.dir * (pos - self.pos) / 10.0 * self.max_vel;
+            desired_vel = self.dir * (pos - self.pos) / 12.0 * self.max_vel;
         }
         let dv = desired_vel - self.vel;
-        // let multiplier = if self.dir * dv > 0.0 { 1.0 } else { 20.0 };
+
+        // let multiplier = if dv > 0.0 { 1.0 } else { 50.0 };
         self.vel += self.acc * (dv / 5.0).clamp(0.0, 1.0) * dt;
         self.vel = self.vel.clamp(0.0, self.max_vel);
+
+        if rand::random::<f64>() < 0.01 && self.vel >= self.max_vel / 5.0 {
+            self.vel /= 5.0;
+        }
         // self.vel = self.dir * (pos - self.pos) / 20.0 * self.max_vel;
         if dv < 0.0 {
             self.vel = desired_vel.clamp(0.0, self.max_vel);

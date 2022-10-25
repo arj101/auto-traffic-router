@@ -101,7 +101,7 @@ spawnRateSlider.onchange = () => {
 }
 
 const renderLoop = () => {
-    if (Math.random() < spawnRate) { sim.spawn_vehicles(2) }
+    if (Math.random() < spawnRate) { sim.spawn_vehicles(5) }
 
     ctx.clearRect(0, 0, canvas.width, canvas.height)
     ctx.fillStyle = 'rgb(30, 30,30)'
