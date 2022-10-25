@@ -191,6 +191,34 @@ export class Simulator {
         wasm.simulator_tick(this.ptr, scale, density_coeff, vel_coeff);
     }
     /**
+    * @param {number} id
+    * @param {number} x
+    * @param {number} y
+    */
+    create_intersection(id, x, y) {
+        wasm.simulator_create_intersection(this.ptr, id, x, y);
+    }
+    /**
+    * @param {number} n1
+    * @param {number} n2
+    */
+    create_road(n1, n2) {
+        wasm.simulator_create_road(this.ptr, n1, n2);
+    }
+    /**
+    * @param {number} n1
+    * @param {number} n2
+    */
+    delete_road(n1, n2) {
+        wasm.simulator_delete_road(this.ptr, n1, n2);
+    }
+    /**
+    * @param {number} id
+    */
+    delete_intersection(id) {
+        wasm.simulator_delete_intersection(this.ptr, id);
+    }
+    /**
     * @returns {number}
     */
     get_vehicle_render_buff_ptr() {

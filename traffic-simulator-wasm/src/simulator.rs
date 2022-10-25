@@ -70,6 +70,7 @@ impl Vehicle {
             frame_count: 0,
             travelled_distance: 0.0,
         };
+        vehicle.vel = vehicle.max_vel;
 
         let (cost, road_id) = map.best_direction(start_node, target_node, None);
         vehicle.enter_road(map, &start_node, &road_id.unwrap());
@@ -297,8 +298,8 @@ impl Simulator {
             let start_node = *nodes.get(0).expect("start node").clone();
             let target_node = *nodes.get(1).expect("target node").clone();
 
-            let start_node = IntersectionId(1);
-            let target_node = IntersectionId(2);
+            // let start_node = IntersectionId(1);
+            // let target_node = IntersectionId(2);
 
             let vehicle = Vehicle::new(
                 VehicleId(self.vehicle_count),
@@ -348,6 +349,27 @@ impl Simulator {
         for (_, road) in &mut self.map.roads {
             road.update(&mut self.vehicles, density_coeff, vel_coeff)
         }
+    }
+
+    pub fn create_intersection(&mut self, id: u32, x: u32, y: u32) {
+        self.map.create_intersection(IntersectionId(id), (x, y));
+    }
+
+    pub fn create_road(&mut self, n1: u32, n2: u32) {
+        let n1 = IntersectionId(n1);
+        let n2 = IntersectionId(n2);
+        let n1 = self.map.intersections.get(&n1).expect("intersection 1");
+        let n2 = self.map.intersections.get(&n2).expect("intersection 2");
+        self.map
+            .create_road(n1.id, n2.id, dist(n1.pos.0, n1.pos.1, n2.pos.0, n2.pos.1));
+    }
+
+    pub fn delete_road(&mut self, n1: u32, n2: u32) {
+        self.map.delete_road(&RoadId(n1, n2));
+    }
+
+    pub fn delete_intersection(&mut self, id: u32) {
+        self.map.delete_intersection(&IntersectionId(id));
     }
 
     pub fn get_vehicle_render_buff_ptr(&self) -> *const f32 {

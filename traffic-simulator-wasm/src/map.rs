@@ -24,8 +24,8 @@ impl RoadId {
 pub struct Intersection {
     pub pos: (u32, u32),
     pub id: IntersectionId,
-    pub roads: Vec<RoadId>,
-    connections: Vec<IntersectionId>,
+    pub roads: HashSet<RoadId>,
+    connections: HashSet<IntersectionId>,
 }
 
 impl Intersection {
@@ -33,18 +33,18 @@ impl Intersection {
         Self {
             pos,
             id,
-            roads: vec![],
-            connections: vec![],
+            roads: HashSet::new(),
+            connections: HashSet::new(),
         }
     }
 
     pub fn connect_to_road(&mut self, road_id: RoadId) {
-        self.roads.push(road_id);
-        self.connections.push(if road_id.0 != self.id.0 {
+        self.roads.insert(road_id);
+        self.connections.insert(if road_id.0 != self.id.0 {
             IntersectionId(road_id.0)
         } else {
             IntersectionId(road_id.1)
-        })
+        });
     }
 }
 
@@ -337,6 +337,28 @@ impl RoadMap {
             .get_mut(&id2)
             .unwrap()
             .connect_to_road(id);
+    }
+
+    pub fn delete_road(&mut self, id: &RoadId) {
+        if let Some(road) = self.roads.remove(id) {
+            if let Some(int1) = self.intersections.get_mut(&IntersectionId(road.id.0)) {
+                int1.connections.remove(&IntersectionId(road.id.1));
+                int1.roads.remove(id);
+            }
+
+            if let Some(int2) = self.intersections.get_mut(&IntersectionId(road.id.1)) {
+                int2.connections.remove(&IntersectionId(road.id.0));
+                int2.roads.remove(id);
+            }
+        }
+    }
+
+    pub fn delete_intersection(&mut self, id: &IntersectionId) {
+        if let Some(int) = self.intersections.remove(id) {
+            for road in int.roads {
+                self.delete_road(&road);
+            }
+        }
     }
 
     fn cost(

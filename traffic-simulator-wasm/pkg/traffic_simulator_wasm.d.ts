@@ -18,6 +18,26 @@ export class Simulator {
 */
   tick(scale: number, density_coeff: number, vel_coeff: number): void;
 /**
+* @param {number} id
+* @param {number} x
+* @param {number} y
+*/
+  create_intersection(id: number, x: number, y: number): void;
+/**
+* @param {number} n1
+* @param {number} n2
+*/
+  create_road(n1: number, n2: number): void;
+/**
+* @param {number} n1
+* @param {number} n2
+*/
+  delete_road(n1: number, n2: number): void;
+/**
+* @param {number} id
+*/
+  delete_intersection(id: number): void;
+/**
 * @returns {number}
 */
   get_vehicle_render_buff_ptr(): number;

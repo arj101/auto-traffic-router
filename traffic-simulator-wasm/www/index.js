@@ -41,7 +41,7 @@ velocitySlider.onchange = () => {
 }
 
 const renderLoop = () => {
-    if (Math.random() < 0.01) { sim.spawn_vehicles() }
+    if (Math.random() < 0.02) { sim.spawn_vehicles() }
 
     ctx.clearRect(0, 0, canvas.width, canvas.height)
     ctx.fillStyle = 'rgb(30, 30,30)'
