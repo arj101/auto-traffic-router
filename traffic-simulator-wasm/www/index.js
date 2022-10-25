@@ -14,15 +14,18 @@ const createMap = (mapData) => {
         let name;
         let id = idCounter;
         let x, y;
+        let weight;
 
         if (Array.isArray(intersection)) {
             name = intersection[0]
             x = intersection[1]
             y = intersection[2]
+            weight = intersection[3]
         } else {
             name = intersection.id;
             x = intersection.pos[0]
             y = intersection.pos[1]
+            weight = intersection.weight;
         }
 
         if (!(typeof x == 'number' && typeof y == 'number' && typeof name == 'string')) continue;
@@ -31,7 +34,7 @@ const createMap = (mapData) => {
         idMap.set(id, name)
 
 
-        sim.create_intersection(id, x, y)
+        sim.create_intersection(id, x, y, weight)
         idCounter += 1;
     }
 
@@ -97,9 +100,8 @@ spawnRateSlider.onchange = () => {
     spawnRateSpan.textContent = `${spawnRate.toFixed(3)}`
 }
 
-
 const renderLoop = () => {
-    if (Math.random() < spawnRate) { sim.spawn_vehicles() }
+    if (Math.random() < spawnRate) { sim.spawn_vehicles(2) }
 
     ctx.clearRect(0, 0, canvas.width, canvas.height)
     ctx.fillStyle = 'rgb(30, 30,30)'

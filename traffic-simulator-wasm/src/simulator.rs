@@ -248,6 +248,7 @@ pub struct Simulator {
     vehicle_count: u32,
     vehicle_render_buff: Vec<f32>,
     pub stats: StatsManager,
+    node_weight_map: HashMap<IntersectionId, f64>,
 }
 
 #[wasm_bindgen]
@@ -259,19 +260,27 @@ impl Simulator {
             vehicle_count: 0,
             vehicle_render_buff: vec![],
             stats: StatsManager::new(),
+            node_weight_map: HashMap::new(),
         }
     }
 
-    pub fn spawn_vehicles(&mut self) {
+    pub fn spawn_vehicles(&mut self, n: usize) {
         if self.map.intersections.len() <= 1 {
             return;
         }
-        for _ in 0..5 {
-            let mut nodes = self
-                .map
-                .intersections
-                .keys()
-                .choose_multiple(&mut rand::thread_rng(), 2);
+        let nodes = self
+            .map
+            .intersections
+            .keys()
+            .map(|id| *id)
+            .collect::<Vec<IntersectionId>>();
+        for _ in 0..n {
+            let mut nodes = nodes
+                .choose_multiple_weighted(&mut rand::thread_rng(), 2, |i| {
+                    *self.node_weight_map.get(i).unwrap_or(&0.0)
+                })
+                .unwrap()
+                .collect::<Vec<&IntersectionId>>();
             nodes.shuffle(&mut rand::thread_rng());
             let start_node = *nodes.get(0).expect("start node").clone();
             let target_node = *nodes.get(1).expect("target node").clone();
@@ -330,8 +339,11 @@ impl Simulator {
         }
     }
 
-    pub fn create_intersection(&mut self, id: u32, x: u32, y: u32) {
+    pub fn create_intersection(&mut self, id: u32, x: u32, y: u32, weight: Option<f64>) {
         self.map.create_intersection(IntersectionId(id), (x, y));
+        if let Some(weight) = weight {
+            self.node_weight_map.insert(IntersectionId(id), weight);
+        }
     }
 
     pub fn create_road(&mut self, n1: u32, n2: u32) {
@@ -349,6 +361,7 @@ impl Simulator {
 
     pub fn delete_intersection(&mut self, id: u32) {
         self.map.delete_intersection(&IntersectionId(id));
+        self.node_weight_map.remove(&IntersectionId(id));
     }
 
     pub fn get_vehicle_render_buff_ptr(&self) -> *const f32 {

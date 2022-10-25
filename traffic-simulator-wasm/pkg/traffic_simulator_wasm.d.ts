@@ -9,8 +9,9 @@ export class Simulator {
 */
   static new(): Simulator;
 /**
+* @param {number} n
 */
-  spawn_vehicles(): void;
+  spawn_vehicles(n: number): void;
 /**
 * @param {number} scale
 * @param {number} density_coeff
@@ -21,8 +22,9 @@ export class Simulator {
 * @param {number} id
 * @param {number} x
 * @param {number} y
+* @param {number | undefined} weight
 */
-  create_intersection(id: number, x: number, y: number): void;
+  create_intersection(id: number, x: number, y: number, weight?: number): void;
 /**
 * @param {number} n1
 * @param {number} n2

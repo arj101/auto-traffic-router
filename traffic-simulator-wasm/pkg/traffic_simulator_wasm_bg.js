@@ -55,6 +55,10 @@ function _assertClass(instance, klass) {
     return instance.ptr;
 }
 
+function isLikeNone(x) {
+    return x === undefined || x === null;
+}
+
 let WASM_VECTOR_LEN = 0;
 
 const lTextEncoder = typeof TextEncoder === 'undefined' ? (0, module.require)('util').TextEncoder : TextEncoder;
@@ -178,9 +182,10 @@ export class Simulator {
         return Simulator.__wrap(ret);
     }
     /**
+    * @param {number} n
     */
-    spawn_vehicles() {
-        wasm.simulator_spawn_vehicles(this.ptr);
+    spawn_vehicles(n) {
+        wasm.simulator_spawn_vehicles(this.ptr, n);
     }
     /**
     * @param {number} scale
@@ -194,9 +199,10 @@ export class Simulator {
     * @param {number} id
     * @param {number} x
     * @param {number} y
+    * @param {number | undefined} weight
     */
-    create_intersection(id, x, y) {
-        wasm.simulator_create_intersection(this.ptr, id, x, y);
+    create_intersection(id, x, y, weight) {
+        wasm.simulator_create_intersection(this.ptr, id, x, y, !isLikeNone(weight), isLikeNone(weight) ? 0 : weight);
     }
     /**
     * @param {number} n1
