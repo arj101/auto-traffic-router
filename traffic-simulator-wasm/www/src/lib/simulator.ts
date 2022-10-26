@@ -39,6 +39,8 @@ export class Simulator {
             antialias: true,
             resolution: window.devicePixelRatio,
         });
+        this.pixiApp.renderer.plugins.interaction.autoPreventDefault = false;
+        this.pixiApp.renderer.view.style.touchAction = "auto";
         this.mapGraphics = new PIXI.Graphics();
         this.spawnProbability = 0;
         this.densityCoeff = 0;
