@@ -94,7 +94,7 @@
 
 <style lang="postcss">
     input {
-        @apply accent-purple-400;
+        @apply accent-fuchsia-300;
     }
 
     hr {
