@@ -61,15 +61,17 @@ createMap(mapData)
 const mapRenderData = sim.get_map_render_data();
 
 const canvas = document.getElementsByTagName('canvas')[0]
-// canvas.width = window.innerWidth - 5;
-// canvas.height = window.innerHeight - 5;
+const ctx = canvas.getContext('2d', { alpha: false })
 
-// window.onresize = () => {
-//     canvas.width = window.innerWidth - 5;
-//     canvas.height = window.innerHeight - 5;
-// }
 
-const ctx = canvas.getContext('2d')
+const dpr = window.devicePixelRatio;
+let rect = canvas.getBoundingClientRect();
+canvas.width = rect.width * dpr;
+canvas.height = rect.height * dpr;
+
+ctx.scale(dpr, dpr)
+canvas.style.width = `${rect.width}px`
+canvas.style.height = `${rect.height}px`
 
 
 let velCoeff = 0;
@@ -80,6 +82,11 @@ const densitySlider = document.getElementById('density')
 const velocitySlider = document.getElementById('velocity')
 const spawnRateSlider = document.getElementById('spawn-rate')
 const spawnRateSpan = document.getElementById('spawn-rate-display')
+
+const vehilceCountP = document.getElementById('vehicle-count')
+const fluxP = document.getElementById('flux')
+const speedP = document.getElementById('speed')
+
 velCoeff = parseFloat(velocitySlider.value)
 densityCoeff = parseFloat(densitySlider.value);
 spawnRate = parseFloat(spawnRateSlider.value) / 200
@@ -104,21 +111,18 @@ const renderLoop = () => {
     if (Math.random() < spawnRate) { sim.spawn_vehicles(5) }
 
     ctx.beginPath();
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+
     ctx.fillStyle = 'rgb(30, 30,30)'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
     ctx.fill()
-    ctx.fillStyle = 'rgba(10, 10, 10, 0.5)'
-    ctx.arc(canvas.width / 2, canvas.height / 2, 5, 0, 2 * Math.PI)
-    ctx.fill()
-
     ctx.lineWidth = 10
     ctx.lineCap = 'round'
     ctx.strokeStyle = 'rgb(100, 100, 100)'
     ctx.fillStyle = 'rgb(150, 150, 150)'
 
-    let i = 0;
-    while (i < mapRenderData.length) {
+
+    for (let i = 0; i < mapRenderData.length; i += 6) {
         ctx.beginPath();
         const [x1, y1, x2, y2] = mapRenderData.slice(i + 2, i + 6);
         ctx.moveTo(x1, y1)
@@ -135,7 +139,6 @@ const renderLoop = () => {
         ctx.closePath()
         ctx.fill()
 
-        i += 6;
     }
 
 
@@ -144,24 +147,21 @@ const renderLoop = () => {
     const buffLen = sim.get_vehicle_render_buff_len();
     const buffPtr = sim.get_vehicle_render_buff_ptr();
     const vehicleRenderData = new Float32Array(memory.buffer, buffPtr, buffLen);
-    i = 0;
     ctx.fillStyle = 'rgb(20, 150, 100)'
     ctx.lineWidth = 1;
     ctx.strokeStyle = 'rgb(255, 50, 50)'
-    while (i < buffLen) {
+    for (let i = 0; i < buffLen; i += 3) {
         ctx.beginPath()
         ctx.arc(vehicleRenderData[i + 1], vehicleRenderData[i + 2], 4, 0, Math.PI * 2)
-        ctx.fill()
         ctx.stroke()
         ctx.closePath()
-        i += 3
     }
 
     ctx.fillStyle = 'rgb(255, 255, 255)'
     ctx.font = '14px Fira Code'
-    ctx.fillText(`vehicle count: ${sim.stats.completed_vehicle_count}`, 20, 20);
-    ctx.fillText(`flux: ${sim.stats.avg_flux.toFixed(5)}`, 20, 40);
-    ctx.fillText(`speed: ${sim.stats.avg_vel.toFixed(5)}`, 20, 60);
+    vehilceCountP.textContent = `vehicle count: ${sim.stats.completed_vehicle_count}`;
+    fluxP.textContent = `flux: ${sim.stats.avg_flux.toFixed(5)}`;
+    speedP.textContent = `speed: ${sim.stats.avg_vel.toFixed(5)}`;
     ctx.fill()
 
     ctx.closePath()
@@ -170,4 +170,5 @@ const renderLoop = () => {
 
 }
 
+// setInterval()
 requestAnimationFrame(renderLoop)
