@@ -72,7 +72,8 @@ export class Simulator {
         this.running = false;
         this.pixiApp.start();
         this.pixiApp.ticker.add(() => {
-            if (Math.random() < 0.1) this.sim.spawn_vehicles(10);
+            if (Math.random() < this.spawnProbability)
+                this.sim.spawn_vehicles(10);
 
             this.sim.tick(10, 20, 20);
             const buffLen = this.sim.get_vehicle_render_buff_len();
