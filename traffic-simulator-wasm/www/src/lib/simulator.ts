@@ -15,6 +15,9 @@ export class Simulator {
     vehicleMap: Map<number, PIXI.Sprite>;
 
     spawnProbability: number;
+    densityCoeff: number;
+    velocityCoeff: number;
+    timeScale: number;
 
     constructor(canvas: HTMLCanvasElement) {
         this.nameMap = new Map();
@@ -38,6 +41,9 @@ export class Simulator {
         });
         this.mapGraphics = new PIXI.Graphics();
         this.spawnProbability = 0;
+        this.densityCoeff = 0;
+        this.velocityCoeff = 0;
+        this.timeScale = 1;
 
         for (let i = 0; i < this.mapRenderData.length; i += 6) {
             const [x1, y1, x2, y2] = this.mapRenderData.slice(i + 2, i + 6);
@@ -75,7 +81,11 @@ export class Simulator {
             if (Math.random() < this.spawnProbability)
                 this.sim.spawn_vehicles(10);
 
-            this.sim.tick(10, 20, 20);
+            this.sim.tick(
+                10 * this.timeScale,
+                this.densityCoeff,
+                this.velocityCoeff
+            );
             const buffLen = this.sim.get_vehicle_render_buff_len();
             const buffPtr = this.sim.get_vehicle_render_buff_ptr();
             const vehicleRenderData = new Float32Array(
