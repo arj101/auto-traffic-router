@@ -103,6 +103,7 @@ spawnRateSlider.onchange = () => {
 const renderLoop = () => {
     if (Math.random() < spawnRate) { sim.spawn_vehicles(5) }
 
+    ctx.beginPath();
     ctx.clearRect(0, 0, canvas.width, canvas.height)
     ctx.fillStyle = 'rgb(30, 30,30)'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
@@ -162,6 +163,8 @@ const renderLoop = () => {
     ctx.fillText(`flux: ${sim.stats.avg_flux.toFixed(5)}`, 20, 40);
     ctx.fillText(`speed: ${sim.stats.avg_vel.toFixed(5)}`, 20, 60);
     ctx.fill()
+
+    ctx.closePath()
 
     requestAnimationFrame(renderLoop)
 
