@@ -30,6 +30,8 @@
             class="my-2 flex flex-col justify-around items-start text-white text-left p-4 border-2 rounded-sm border-fuchsia-200 w-fit border-opacity-30"
         >
             <h1 class="text-xl font-black">Stats</h1>
+            <hr />
+
             <p class="text-md">
                 Vehicle count: <span class="font-semibold text-fuchsia-300"
                     >{stats_vehicle_count}</span
@@ -50,7 +52,7 @@
             class="m-2 flex flex-col justify-around items-start text-white text-left p-4 border-2 rounded-sm border-fuchsia-200 w-fit border-opacity-30"
         >
             <h1 class="text-xl font-black">Settings</h1>
-            <hr class="w-full my-2 border-fuchsia-200 border-opacity-30" />
+            <hr />
             <label for="spawn-prob" class="font-bold">Spawn probability</label>
             <input
                 type="range"
@@ -93,5 +95,9 @@
 <style lang="postcss">
     input {
         @apply accent-purple-400;
+    }
+
+    hr {
+        @apply w-full my-2 border-fuchsia-200 border-opacity-30;
     }
 </style>
