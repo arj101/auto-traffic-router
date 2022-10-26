@@ -74,6 +74,9 @@ canvas.style.width = `${rect.width}px`
 canvas.style.height = `${rect.height}px`
 
 
+// const app = PIXI.Application({ view: canvas, antialias: true })
+
+
 let velCoeff = 0;
 let densityCoeff = 0;
 let spawnRate = 0;
@@ -110,34 +113,34 @@ spawnRateSlider.onchange = () => {
 const renderLoop = () => {
     if (Math.random() < spawnRate) { sim.spawn_vehicles(5) }
 
-    ctx.beginPath();
+    // ctx.beginPath();
 
 
-    ctx.fillStyle = 'rgb(30, 30,30)'
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
-    ctx.fill()
-    ctx.lineWidth = 10
-    ctx.lineCap = 'round'
-    ctx.strokeStyle = 'rgb(100, 100, 100)'
-    ctx.fillStyle = 'rgb(150, 150, 150)'
+    // ctx.fillStyle = 'rgb(30, 30,30)'
+    // ctx.fillRect(0, 0, canvas.width, canvas.height)
+    // ctx.fill()
+    // ctx.lineWidth = 10
+    // ctx.lineCap = 'round'
+    // ctx.strokeStyle = 'rgb(100, 100, 100)'
+    // ctx.fillStyle = 'rgb(150, 150, 150)'
 
 
     for (let i = 0; i < mapRenderData.length; i += 6) {
-        ctx.beginPath();
+        // ctx.beginPath();
         const [x1, y1, x2, y2] = mapRenderData.slice(i + 2, i + 6);
-        ctx.moveTo(x1, y1)
-        ctx.lineTo(x2, y2)
-        ctx.stroke();
-        ctx.closePath();
+        // ctx.moveTo(x1, y1)
+        // ctx.lineTo(x2, y2)
+        // ctx.stroke();
+        // ctx.closePath();
 
-        ctx.beginPath()
-        ctx.arc(x1, y1, 6, 0, Math.PI * 2)
-        ctx.closePath()
-        ctx.fill()
-        ctx.beginPath()
-        ctx.arc(x2, y2, 6, 0, Math.PI * 2)
-        ctx.closePath()
-        ctx.fill()
+        // ctx.beginPath()
+        // ctx.arc(x1, y1, 6, 0, Math.PI * 2)
+        // ctx.closePath()
+        // ctx.fill()
+        // ctx.beginPath()
+        // ctx.arc(x2, y2, 6, 0, Math.PI * 2)
+        // ctx.closePath()
+        // ctx.fill()
 
     }
 
@@ -157,14 +160,12 @@ const renderLoop = () => {
         ctx.closePath()
     }
 
-    ctx.fillStyle = 'rgb(255, 255, 255)'
-    ctx.font = '14px Fira Code'
     vehilceCountP.textContent = sim.stats.completed_vehicle_count;
     fluxP.textContent = sim.stats.avg_flux.toFixed(5);
     speedP.textContent = sim.stats.avg_vel.toFixed(5);
-    ctx.fill()
+    // ctx.fill()
 
-    ctx.closePath()
+    // ctx.closePath()
 
     requestAnimationFrame(renderLoop)
 
