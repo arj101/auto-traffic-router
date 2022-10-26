@@ -28,9 +28,11 @@
 </script>
 
 <main
-    class="w-screen h-screen bg-neutral-800 p-2 overflow-scroll font-sans flex flex-row justify-around items-center"
+    class="transition-all min-w-screen min-h-screen bg-neutral-800 p-2 overflow-scroll font-sans flex flex-col lg:flex-row justify-around items-center"
 >
-    <div class="flex flex-col justify-around items-stretch m-4">
+    <div
+        class="flex flex-col-reverse md:flex-col justify-around items-stretch m-4"
+    >
         <div class="flex flex-row m-0 justify-stretch items-stretch w-full">
             <div
                 class="m-2 flex flex-col justify-around items-start text-white text-left p-4 border-2 rounded-sm border-fuchsia-200 w-full border-opacity-30"
@@ -55,7 +57,9 @@
                 </p>
             </div>
         </div>
-        <div class="flex flex-row m-0 justify-stretch items-stretch w-full">
+        <div
+            class="flex flex-col md:flex-row m-0 justify-stretch items-stretch w-full"
+        >
             <div
                 class="m-2 flex flex-col justify-around items-start text-white text-left p-5 border-2 rounded-sm border-fuchsia-200 w-full border-opacity-30"
             >
@@ -187,7 +191,7 @@
         bind:this={canvas}
         width="640"
         height="480"
-        class="border-black border-2 rounded-sm"
+        class="w-full h-auto lg:w-max border-black border-2 rounded-sm m-2"
     />
 </main>
 
