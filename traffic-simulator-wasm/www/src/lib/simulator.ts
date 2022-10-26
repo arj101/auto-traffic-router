@@ -14,6 +14,8 @@ export class Simulator {
     vehicleTexture: PIXI.RenderTexture;
     vehicleMap: Map<number, PIXI.Sprite>;
 
+    spawnProbability: number;
+
     constructor(canvas: HTMLCanvasElement) {
         this.nameMap = new Map();
         this.idMap = new Map();
@@ -27,13 +29,15 @@ export class Simulator {
         canvas.style.width = `${rect.width}px`;
         canvas.style.height = `${rect.height}px`;
         this.pixiApp = new PIXI.Application({
-      
+            width: 640,
+            height: 480,
             view: canvas,
             backgroundColor: 0x202020,
             antialias: true,
             resolution: window.devicePixelRatio,
         });
         this.mapGraphics = new PIXI.Graphics();
+        this.spawnProbability = 0;
 
         for (let i = 0; i < this.mapRenderData.length; i += 6) {
             const [x1, y1, x2, y2] = this.mapRenderData.slice(i + 2, i + 6);
