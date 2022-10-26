@@ -118,7 +118,9 @@
                 <hr />
                 <p class="text-fuchsia-100 text-lg">sensitivity settings</p>
                 <hr />
-                <label for="density-coeff" class="font-bold"> Density</label>
+                <label for="density-coeff" class="font-bold"
+                    >Traffic density</label
+                >
                 <div class="flex flex-row justify-between">
                     <input
                         type="range"
@@ -150,7 +152,7 @@
                 </div>
 
                 <hr />
-                <label for="vel-coeff" class="font-bold"> Speed</label>
+                <label for="vel-coeff" class="font-bold">Average speed</label>
                 <div class="flex flex-row  justify-between">
                     <input
                         type="range"
