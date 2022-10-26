@@ -159,9 +159,9 @@ const renderLoop = () => {
 
     ctx.fillStyle = 'rgb(255, 255, 255)'
     ctx.font = '14px Fira Code'
-    vehilceCountP.textContent = `vehicle count: ${sim.stats.completed_vehicle_count}`;
-    fluxP.textContent = `flux: ${sim.stats.avg_flux.toFixed(5)}`;
-    speedP.textContent = `speed: ${sim.stats.avg_vel.toFixed(5)}`;
+    vehilceCountP.textContent = sim.stats.completed_vehicle_count;
+    fluxP.textContent = sim.stats.avg_flux.toFixed(5);
+    speedP.textContent = sim.stats.avg_vel.toFixed(5);
     ctx.fill()
 
     ctx.closePath()
