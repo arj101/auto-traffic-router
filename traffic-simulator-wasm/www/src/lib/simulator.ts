@@ -22,9 +22,12 @@ export class Simulator {
 
         const dpi = window.devicePixelRatio;
         const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * dpi;
+        canvas.height = rect.height * dpi;
+        canvas.style.width = `${rect.width}px`;
+        canvas.style.height = `${rect.height}px`;
         this.pixiApp = new PIXI.Application({
-            width: rect.width / dpi,
-            height: rect.height / dpi,
+      
             view: canvas,
             backgroundColor: 0x202020,
             antialias: true,
