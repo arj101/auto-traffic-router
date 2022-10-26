@@ -20,9 +20,11 @@ export class Simulator {
         this.sim = wasm.Simulator.new();
         this.createMap(map4);
 
+        const dpi = window.devicePixelRatio;
+        const rect = canvas.getBoundingClientRect();
         this.pixiApp = new PIXI.Application({
-            width: 640,
-            height: 480,
+            width: rect.width * dpi,
+            height: rect.height * dpi,
             view: canvas,
             backgroundColor: 0x202020,
             antialias: true,
@@ -55,7 +57,7 @@ export class Simulator {
         circle.lineStyle({ width: 2, color: 0xdeadbeef });
         circle.drawCircle(4, 4, 4);
         this.vehicleTexture = this.pixiApp.renderer.generateTexture(circle, {
-            resolution: window.devicePixelRatio,
+            resolution: dpi,
         });
 
         this.vehicleMap = new Map();
