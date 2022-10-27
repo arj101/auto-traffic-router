@@ -13,6 +13,7 @@ export class Simulator {
     mapRenderData: Uint32Array;
     vehicleTexture: PIXI.RenderTexture;
     vehicleMap: Map<number, PIXI.Sprite>;
+    spritePool: Array<PIXI.Sprite>;
 
     spawnProbability: number;
     densityCoeff: number;
@@ -76,6 +77,9 @@ export class Simulator {
         });
 
         this.vehicleMap = new Map();
+        this.spritePool = new Array(50).fill(
+            PIXI.Sprite.from(this.vehicleTexture)
+        );
 
         this.running = false;
         this.pixiApp.start();
@@ -105,7 +109,8 @@ export class Simulator {
                     sprite = this.vehicleMap.get(id);
                     this.vehicleMap.delete(id);
                 } else {
-                    sprite = PIXI.Sprite.from(this.vehicleTexture);
+                    sprite = this.spritePool.pop();
+                    if (!sprite) sprite = PIXI.Sprite.from(this.vehicleTexture);
                     this.pixiApp.stage.addChild(sprite);
                 }
 
@@ -115,7 +120,7 @@ export class Simulator {
             }
             for (const [_, s] of this.vehicleMap) {
                 this.pixiApp.stage.removeChild(s);
-                s.destroy();
+                this.spritePool.push(s);
             }
             this.vehicleMap = newVehicleMap;
         });
