@@ -28,7 +28,7 @@
 </script>
 
 <main
-    class="transition-all min-w-screen min-h-screen bg-neutral-800 p-2 overflow-scroll font-sans flex flex-col lg:flex-row justify-around items-center"
+    class="transition-all min-w-screen min-h-screen bg-neutral-800 p-2 font-sans flex flex-col lg:flex-row justify-around items-center"
 >
     <div
         class="flex flex-col-reverse md:flex-col justify-around items-stretch m-4"
