@@ -70,8 +70,10 @@ export class Simulator {
 
         const circle = new PIXI.Graphics();
 
-        circle.lineStyle({ width: 2, color: 0xdeadbeef });
+        // circle.lineStyle({ width: 1, color: 0x0, alpha: 0.25 });
+        circle.beginFill(0xffffff, 0.2);
         circle.drawCircle(4, 4, 4);
+        circle.endFill();
         this.vehicleTexture = this.pixiApp.renderer.generateTexture(circle, {
             resolution: dpi,
         });
@@ -85,7 +87,7 @@ export class Simulator {
         this.pixiApp.start();
         this.pixiApp.ticker.add(() => {
             if (Math.random() < this.spawnProbability)
-                this.sim.spawn_vehicles(10);
+                this.sim.spawn_vehicles(2);
 
             this.sim.tick(
                 10 * this.timeScale,
