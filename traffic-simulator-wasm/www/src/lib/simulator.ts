@@ -20,11 +20,10 @@ export class Simulator {
     velocityCoeff: number;
     timeScale: number;
 
-    constructor(canvas: HTMLCanvasElement) {
+    constructor(canvas: HTMLCanvasElement, map = map4) {
         this.nameMap = new Map();
         this.idMap = new Map();
         this.sim = wasm.Simulator.new();
-        this.createMap(map4);
 
         const dpi = window.devicePixelRatio;
         const rect = canvas.getBoundingClientRect();
@@ -40,6 +39,7 @@ export class Simulator {
             antialias: true,
             resolution: window.devicePixelRatio,
         });
+        window.addEventListener("resize", this.pixiApp.resize);
         this.pixiApp.renderer.plugins.interaction.autoPreventDefault = false;
         this.pixiApp.renderer.view.style.touchAction = "auto";
         this.mapGraphics = new PIXI.Graphics();
@@ -48,6 +48,100 @@ export class Simulator {
         this.velocityCoeff = 0;
         this.timeScale = 1;
 
+        this.pixiApp.stage.addChild(this.mapGraphics);
+
+        if (!this.createMap(map)) {
+            console.warn("Parsing map data failed.");
+        }
+        this.drawMap();
+        this.createCircleTexture();
+
+        this.vehicleMap = new Map();
+        this.spritePool = new Array(50).fill(
+            PIXI.Sprite.from(this.vehicleTexture)
+        );
+
+        this.stop();
+
+        this.pixiApp.ticker.add(() => this.tick());
+    }
+
+    reinstantiateWithMap(map) {
+        this.stop();
+
+        this.sim.free();
+        this.sim = wasm.Simulator.new();
+
+        this.idMap.clear();
+        this.nameMap.clear();
+        for (const [_, s] of this.vehicleMap) {
+            this.pixiApp.stage.removeChild(s);
+            this.spritePool.push(s);
+        }
+        this.vehicleMap.clear();
+
+        if (!this.createMap(map)) {
+            console.warn("Parsing map data failed.");
+            return;
+        }
+        this.drawMap();
+
+        this.start();
+    }
+
+    stop() {
+        this.running = false;
+        this.pixiApp.stop();
+    }
+
+    start() {
+        this.running = true;
+        this.pixiApp.start();
+    }
+
+    tick() {
+        if (Math.random() < this.spawnProbability) this.sim.spawn_vehicles(2);
+
+        this.sim.tick(
+            10 * this.timeScale,
+            this.densityCoeff,
+            this.velocityCoeff
+        );
+        const buffLen = this.sim.get_vehicle_render_buff_len();
+        const buffPtr = this.sim.get_vehicle_render_buff_ptr();
+        const vehicleRenderData = new Float32Array(
+            memory.buffer,
+            buffPtr,
+            buffLen
+        );
+        const newVehicleMap = new Map();
+        for (let i = 0; i < buffLen; i += 3) {
+            const id = vehicleRenderData[i];
+            const x = vehicleRenderData[i + 1];
+            const y = vehicleRenderData[i + 2];
+            let sprite;
+            if (this.vehicleMap.has(id)) {
+                sprite = this.vehicleMap.get(id);
+                this.vehicleMap.delete(id);
+            } else {
+                sprite = this.spritePool.pop();
+                if (!sprite) sprite = PIXI.Sprite.from(this.vehicleTexture);
+                this.pixiApp.stage.addChild(sprite);
+            }
+
+            sprite.x = x - sprite.width / 2;
+            sprite.y = y - sprite.height / 2;
+            newVehicleMap.set(id, sprite);
+        }
+        for (const [_, s] of this.vehicleMap) {
+            this.pixiApp.stage.removeChild(s);
+            this.spritePool.push(s);
+        }
+        this.vehicleMap = newVehicleMap;
+    }
+
+    drawMap() {
+        this.mapGraphics.clear();
         for (let i = 0; i < this.mapRenderData.length; i += 6) {
             const [x1, y1, x2, y2] = this.mapRenderData.slice(i + 2, i + 6);
 
@@ -64,71 +158,20 @@ export class Simulator {
             this.mapGraphics.drawCircle(x2, y2, 8);
             this.mapGraphics.endFill();
         }
-        this.pixiApp.stage.addChild(this.mapGraphics);
+    }
 
-        // const renderer = PIXI.autoDetectRenderer();
-
+    createCircleTexture() {
         const circle = new PIXI.Graphics();
-
-        // circle.lineStyle({ width: 1, color: 0x0, alpha: 0.25 });
         circle.beginFill(0xffffff, 0.2);
         circle.drawCircle(4, 4, 4);
         circle.endFill();
         this.vehicleTexture = this.pixiApp.renderer.generateTexture(circle, {
-            resolution: dpi,
-        });
-
-        this.vehicleMap = new Map();
-        this.spritePool = new Array(50).fill(
-            PIXI.Sprite.from(this.vehicleTexture)
-        );
-
-        this.running = false;
-        this.pixiApp.start();
-        this.pixiApp.ticker.add(() => {
-            if (Math.random() < this.spawnProbability)
-                this.sim.spawn_vehicles(2);
-
-            this.sim.tick(
-                10 * this.timeScale,
-                this.densityCoeff,
-                this.velocityCoeff
-            );
-            const buffLen = this.sim.get_vehicle_render_buff_len();
-            const buffPtr = this.sim.get_vehicle_render_buff_ptr();
-            const vehicleRenderData = new Float32Array(
-                memory.buffer,
-                buffPtr,
-                buffLen
-            );
-            const newVehicleMap = new Map();
-            for (let i = 0; i < buffLen; i += 3) {
-                const id = vehicleRenderData[i];
-                const x = vehicleRenderData[i + 1];
-                const y = vehicleRenderData[i + 2];
-                let sprite;
-                if (this.vehicleMap.has(id)) {
-                    sprite = this.vehicleMap.get(id);
-                    this.vehicleMap.delete(id);
-                } else {
-                    sprite = this.spritePool.pop();
-                    if (!sprite) sprite = PIXI.Sprite.from(this.vehicleTexture);
-                    this.pixiApp.stage.addChild(sprite);
-                }
-
-                sprite.x = x - sprite.width / 2;
-                sprite.y = y - sprite.height / 2;
-                newVehicleMap.set(id, sprite);
-            }
-            for (const [_, s] of this.vehicleMap) {
-                this.pixiApp.stage.removeChild(s);
-                this.spritePool.push(s);
-            }
-            this.vehicleMap = newVehicleMap;
+            resolution: window.devicePixelRatio,
         });
     }
 
     createMap(mapData) {
+        if (!mapData.intersections) return false;
         let idCounter = 0;
         for (const intersection of mapData.intersections) {
             let name;
@@ -183,5 +226,6 @@ export class Simulator {
         }
 
         this.mapRenderData = this.sim.get_map_render_data();
+        return true;
     }
 }

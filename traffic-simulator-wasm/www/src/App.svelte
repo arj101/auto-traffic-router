@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
+    import { fly } from "svelte/transition";
     import { Simulator } from "./lib/simulator";
 
     let simulator: Simulator;
@@ -14,8 +15,15 @@
     let densityCoeff = 0;
     let velCoeff = 0;
 
+    let showFileOpener = true;
+    let files;
+    let mapData;
+    let mapDataReadResult = "";
+    let hadReadError = false;
+
     onMount(() => {
         simulator = new Simulator(canvas!);
+        simulator.start();
     });
 
     setInterval(() => {
@@ -26,6 +34,92 @@
         stats_speed = simulator.sim.stats.avg_vel;
     }, 100);
 </script>
+
+<div class="flex flex-col justify-stretch align-stretch">
+    {#if showFileOpener}
+        <div
+            transition:fly={{ duration: 300, y: -100 }}
+            class="color-white text-white accent-fuchsia-300 p-4 bg-fuchsia-300 bg-opacity-10 flex flex-row justify-start items-center"
+        >
+            <label for="map-data" class="m-2 font-bold">Upload map file</label>
+            <!-- svelte-ignore missing-declaration -->
+            <div class="flex flex-row justify-stretch items-stretch">
+                <input
+                    class="cursor-pointer p-2 block placeholder-fuchsia-300 mr-0 bg-transparent text-white border-2 border-fuchsia-200 border-opacity-30 rounded-l-md hover:bg-fuchsia-300 hover:bg-opacity-30"
+                    type="file"
+                    name="map-data"
+                    id="map-data"
+                    bind:files
+                    on:change={() => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            if (typeof e.target.result == "string") {
+                                let readSuccess = true;
+                                mapData = (() => {
+                                    try {
+                                        return JSON.parse(e.target.result);
+                                    } catch (e) {
+                                        hadReadError = true;
+                                        mapDataReadResult =
+                                            "Parsing JSON failed (wrong format maybe?)";
+                                        readSuccess = false;
+                                    }
+                                })();
+                                if (readSuccess) {
+                                    simulator.reinstantiateWithMap(mapData);
+                                    hadReadError = false;
+                                    mapDataReadResult =
+                                        "Successfully read map data";
+                                }
+                            } else {
+                                hadReadError = true;
+                                mapDataReadResult =
+                                    "Unexpected type for file content";
+                            }
+                        };
+                        reader.onerror = (e) => {
+                            hadReadError = true;
+                            mapDataReadResult = `Error reading file ${e}`;
+                        };
+                        reader.readAsText(files[0]);
+                    }}
+                />
+                {#if hadReadError && mapDataReadResult.length > 0}
+                    <p
+                        class="p-2 bg-red-500 rounded-r-md grid place-items-center"
+                    >
+                        {mapDataReadResult}
+                    </p>
+                {:else if mapDataReadResult.length > 0}
+                    <p
+                        class="p-2 bg-green-500 rounded-r-md grid place-items-center"
+                    >
+                        {mapDataReadResult}
+                    </p>
+                {/if}
+            </div>
+        </div>
+    {/if}
+
+    <div class="relative">
+        <button
+            class="transition-all absolute left-1/2 top-2 -translate-x-1/2 rounded-xl bg-transparent border-2 border-fuchsia-300 font-black shadow-lg grid place-items-center hover:opacity-100 {showFileOpener
+                ? 'opacity-80 p-2'
+                : 'opacity-30 p-1'}"
+            on:click={() => {
+                showFileOpener = !showFileOpener;
+            }}
+        >
+            <span
+                class="material-symbols-rounded grid place-items-center text-fuchsia-300 text-3xl {showFileOpener
+                    ? 'rotate-180'
+                    : ''}"
+            >
+                expand_more
+            </span>
+        </button>
+    </div>
+</div>
 
 <main
     class="transition-all min-w-screen min-h-screen bg-neutral-800 p-2 font-sans flex flex-col lg:flex-row justify-around items-center"
