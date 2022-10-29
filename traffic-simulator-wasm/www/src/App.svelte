@@ -35,7 +35,7 @@
     }, 100);
 </script>
 
-<div class="flex flex-col justify-stretch align-stretch">
+<div class="flex flex-col justify-stretch align-stretch text-sm mb-10 lg:mb-2">
     {#if showFileOpener}
         <div
             transition:fly={{ duration: 300, y: -100 }}
