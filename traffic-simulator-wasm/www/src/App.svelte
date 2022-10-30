@@ -239,7 +239,7 @@
                     name="vehicle-alpha"
                     id="vehicle-alpha"
                     min="0"
-                    max="1"
+                    max="0.5"
                     step="0.01"
                     bind:value={vehicleAlpha}
                     on:input={() => {
