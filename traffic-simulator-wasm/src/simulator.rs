@@ -1,20 +1,11 @@
-use std::{
-    collections::{HashMap, VecDeque},
-    time::Instant,
-};
+use std::{collections::VecDeque, time::Instant};
+
+use rustc_hash::FxHashMap;
 
 use rand::seq::{IteratorRandom, SliceRandom};
 use wasm_bindgen::prelude::*;
 
-use web_sys::console::log;
-
 use crate::map::*;
-
-macro_rules! log {
-    ( $( $t:tt )* ) => {
-        web_sys::console::log_1(&format!( $( $t )* ).into());
-    }
-}
 
 pub enum VehicleState {
     Running,
@@ -212,6 +203,7 @@ impl StatsManager {
         }
     }
 
+    #[inline(always)]
     pub fn tick(&mut self) {
         self.frame_count += 1;
     }
@@ -248,24 +240,27 @@ impl StatsManager {
 
 #[wasm_bindgen]
 pub struct Simulator {
-    vehicles: HashMap<VehicleId, Vehicle>,
+    vehicles: FxHashMap<VehicleId, Vehicle>,
     map: RoadMap,
     vehicle_count: u32,
     vehicle_render_buff: Vec<f32>,
     pub stats: StatsManager,
-    node_weight_map: HashMap<IntersectionId, f64>,
+    node_weight_map: FxHashMap<IntersectionId, f64>,
+
+    vehicle_remove_list: Vec<VehicleId>,
 }
 
 #[wasm_bindgen]
 impl Simulator {
     pub fn new() -> Self {
         Self {
-            vehicles: HashMap::new(),
+            vehicles: FxHashMap::default(),
             map: RoadMap::new(),
             vehicle_count: 0,
             vehicle_render_buff: vec![],
             stats: StatsManager::new(),
-            node_weight_map: HashMap::new(),
+            node_weight_map: FxHashMap::default(),
+            vehicle_remove_list: Vec::with_capacity(300),
         }
     }
 
@@ -305,15 +300,15 @@ impl Simulator {
     }
 
     pub fn tick(&mut self, scale: f32, density_coeff: f64, vel_coeff: f64) {
-        let (density_coeff, vel_coeff) = (density_coeff.clone(), vel_coeff.clone());
+        // let (density_coeff, vel_coeff) = (density_coeff.clone(), vel_coeff.clone());
         let dt = 0.001 * scale;
         self.vehicle_render_buff.clear();
         self.stats.tick();
-        let mut remove_list = vec![];
         for (_, vehicle) in &mut self.vehicles {
             //(fixed dt per frame)
             if let VehicleState::Completed = vehicle.update(&mut self.map, dt as f64) {
-                remove_list.push(vehicle.id);
+                self.vehicle_remove_list.push(vehicle.id);
+
                 continue;
             }
             self.vehicle_render_buff.push(vehicle.id.0 as f32);
@@ -330,17 +325,16 @@ impl Simulator {
             self.vehicle_render_buff.push(x as f32);
             self.vehicle_render_buff.push(y as f32);
         }
-        for id in &remove_list {
+        for id in &self.vehicle_remove_list {
             if let Some(v) = self.vehicles.remove(&id) {
                 self.stats.update_from_vehicle(v)
             }
         }
-        if remove_list.len() > 0 {
+        if self.vehicle_remove_list.len() > 0 {
             self.stats.update_last_flow_frame()
         }
-        for (_, road) in &mut self.map.roads {
-            road.update(&mut self.vehicles, density_coeff, vel_coeff)
-        }
+        self.vehicle_remove_list.clear();
+        self.map.update(&self.vehicles, density_coeff, vel_coeff);
     }
 
     pub fn create_intersection(&mut self, id: u32, x: u32, y: u32, weight: Option<f64>) {

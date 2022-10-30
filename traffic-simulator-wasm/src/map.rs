@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use rustc_hash::{FxHashMap, FxHashSet};
 
 use crate::simulator::{Vehicle, VehicleId};
 
@@ -24,8 +24,8 @@ impl RoadId {
 pub struct Intersection {
     pub pos: (u32, u32),
     pub id: IntersectionId,
-    pub roads: HashSet<RoadId>,
-    connections: HashSet<IntersectionId>,
+    pub roads: FxHashSet<RoadId>,
+    connections: FxHashSet<IntersectionId>,
 }
 
 impl Intersection {
@@ -33,8 +33,8 @@ impl Intersection {
         Self {
             pos,
             id,
-            roads: HashSet::new(),
-            connections: HashSet::new(),
+            roads: FxHashSet::default(),
+            connections: FxHashSet::default(),
         }
     }
 
@@ -74,9 +74,9 @@ pub struct Lane {
     dir: f64,
     start_pos: f64,
     end_pos: f64,
-    vehicles: HashSet<VehicleId>,
+    vehicles: FxHashSet<VehicleId>,
     lane: Vec<(VehicleId, f64)>,
-    infront_map: HashMap<VehicleId, (VehicleId, f64)>,
+    infront_map: FxHashMap<VehicleId, (VehicleId, f64)>,
     lane_buff: Vec<(VehicleId, f64)>,
 }
 
@@ -89,9 +89,9 @@ impl Lane {
             start_pos,
             end_pos,
             dir,
-            vehicles: HashSet::new(),
+            vehicles: FxHashSet::default(),
             lane: vec![],
-            infront_map: HashMap::new(),
+            infront_map: FxHashMap::default(),
             lane_buff: vec![],
             dynamic_cost: 0.0,
         }
@@ -155,7 +155,7 @@ impl Lane {
 
     pub fn update(
         &mut self,
-        vehicles: &HashMap<VehicleId, Vehicle>,
+        vehicles: &FxHashMap<VehicleId, Vehicle>,
         density_coeff: f64,
         vel_coeff: f64,
     ) {
@@ -177,7 +177,7 @@ impl Lane {
 
     fn update_dynamic_cost(
         &mut self,
-        vehicles: &HashMap<VehicleId, Vehicle>,
+        vehicles: &FxHashMap<VehicleId, Vehicle>,
         density_coeff: f64,
         vel_coeff: f64,
     ) {
@@ -293,7 +293,7 @@ impl Road {
 
     pub fn update(
         &mut self,
-        vehicles: &HashMap<VehicleId, Vehicle>,
+        vehicles: &FxHashMap<VehicleId, Vehicle>,
         density_coeff: f64,
         vel_coeff: f64,
     ) {
@@ -305,16 +305,31 @@ impl Road {
 }
 
 pub struct RoadMap {
-    pub roads: HashMap<RoadId, Road>,
-    pub intersections: HashMap<IntersectionId, Intersection>,
+    pub roads: FxHashMap<RoadId, Road>,
+    pub intersections: FxHashMap<IntersectionId, Intersection>,
+    best_route_cache: FxHashMap<(IntersectionId, IntersectionId), (f64, RoadId)>,
 }
 
 impl RoadMap {
     pub fn new() -> Self {
         Self {
-            roads: HashMap::new(),
-            intersections: HashMap::new(),
+            roads: FxHashMap::default(),
+            intersections: FxHashMap::default(),
+            best_route_cache: FxHashMap::default(),
         }
+    }
+
+    #[inline(always)]
+    pub fn update(
+        &mut self,
+        vehicles: &FxHashMap<VehicleId, Vehicle>,
+        density_coeff: f64,
+        vel_coeff: f64,
+    ) {
+        for (_, road) in &mut self.roads {
+            road.update(vehicles, density_coeff, vel_coeff)
+        }
+        self.best_route_cache.clear()
     }
 
     pub fn create_intersection(&mut self, id: IntersectionId, pos: (u32, u32)) {
@@ -361,16 +376,17 @@ impl RoadMap {
         }
     }
 
+    #[inline(always)]
     fn cost(
         &self,
         n1: IntersectionId,
         n2: IntersectionId,
         curr_road: Option<&RoadId>,
         use_dynamic: bool,
-        visited: &Vec<RoadId>,
-    ) -> (f64, Option<RoadId>) {
+        mut visited: Vec<RoadId>,
+    ) -> (f64, Option<RoadId>, Vec<RoadId>) {
         if n1 == n2 {
-            return (0.0, None);
+            return (0.0, None, visited);
         }
 
         let node1 = self.intersections.get(&n1).unwrap();
@@ -382,42 +398,58 @@ impl RoadMap {
                 continue;
             }
             let road = self.roads.get(road_id).unwrap();
-            let cost = road.cost_from(&n1, use_dynamic)
-                + self
-                    .cost(
-                        road.id.get_other_id(n1),
-                        n2,
-                        Some(&road.id),
-                        use_dynamic,
-                        &[road.id].iter().chain(visited).map(|i| i.clone()).collect(),
-                    )
-                    .0;
+            visited.push(*road_id);
+            let (cost_from_next_node, _, visited_returned) = self.cost(
+                road.id.get_other_id(n1),
+                n2,
+                Some(&road.id),
+                use_dynamic,
+                visited,
+            );
+            visited = visited_returned;
+            visited.pop();
+            let cost = road.cost_from(&n1, use_dynamic) + cost_from_next_node;
             if cost < lowest_cost {
                 lowest_cost = cost;
                 best_road = Some(road.id);
             }
         }
-
-        (lowest_cost, best_road)
+        (lowest_cost, best_road, visited)
     }
 
+    #[inline(always)]
     pub fn best_direction(
-        &self,
+        &mut self,
         n1: IntersectionId,
         n2: IntersectionId,
         curr_road: Option<&RoadId>,
     ) -> (f64, Option<RoadId>) {
-        self.cost(n1, n2, curr_road, true, &vec![])
+        if let Some((cost, road)) = self.best_route_cache.get(&(n1, n2)) {
+            return (*cost, Some(*road));
+        }
+
+        let (cost, road, _) = self.cost(
+            n1,
+            n2,
+            curr_road,
+            true,
+            Vec::with_capacity(self.roads.len().pow(2)),
+        );
+        if let Some(road) = road {
+            self.best_route_cache.insert((n1, n2), (cost, road));
+        }
+
+        (cost, road)
     }
 
-    pub fn shortest_direction(
-        &self,
-        n1: IntersectionId,
-        n2: IntersectionId,
-        curr_road: Option<&RoadId>,
-    ) -> (f64, Option<RoadId>) {
-        self.cost(n1, n2, curr_road, false, &vec![])
-    }
+    // pub fn shortest_direction(
+    //     &self,
+    //     n1: IntersectionId,
+    //     n2: IntersectionId,
+    //     curr_road: Option<&RoadId>,
+    // ) -> (f64, Option<RoadId>) {
+    //     self.cost(n1, n2, curr_road, false, vec![])
+    // }
 
     pub fn road_length(&self, road_id: &RoadId) -> Option<f64> {
         if let Some(road) = self.roads.get(road_id) {
