@@ -38,7 +38,9 @@
 </script>
 
 <div
-    class=" top-0 left-0 w-full flex flex-col justify-stretch align-stretch mt-0 text-sm mb-10 lg:mb-2 p-0"
+    class=" top-0 left-0 w-full flex flex-col justify-stretch align-stretch mt-0 text-sm {showFileOpener
+        ? 'mb-14'
+        : 'mb-8'} lg:mb-2 p-0"
 >
     {#if showFileOpener}
         <div
@@ -126,14 +128,14 @@
 </div>
 
 <main
-    class="transition-all min-w-screen min-h-screen bg-neutral-800 p-2 font-sans flex flex-col lg:flex-row justify-around items-center"
+    class="transition-all min-w-screen min-h-screen bg-neutral-800 p-2 font-sans flex flex-col-reverse lg:flex-row justify-stretch items-stretch md:justify-around md:items-center"
 >
-    <div
-        class="flex flex-col-reverse md:flex-col justify-around items-stretch m-4"
-    >
-        <div class="flex flex-row m-0 justify-stretch items-stretch w-full">
+    <div class="flex flex-col justify-around items-stretch m-4">
+        <div
+            class="flex flex-row m-2 justify-stretch items-stretch p-0 w-full md:w-auto"
+        >
             <div
-                class="m-2 flex flex-col justify-around items-start text-white text-left p-4 border-2 rounded-sm border-fuchsia-200 w-full border-opacity-30"
+                class="m-0 flex flex-col justify-around items-stretch w-full text-white text-left p-4 border-2 rounded-sm border-fuchsia-200 border-opacity-30"
             >
                 <h1 class="text-xl font-black">Stats</h1>
                 <hr />
@@ -166,7 +168,7 @@
                 <label for="spawn-prob" class="font-bold"
                     >Spawn probability</label
                 >
-                <div class="flex flex-row justify-between">
+                <div class="flex flex-row justify-stretch w-full">
                     <input
                         type="range"
                         name="spawn-prob"
@@ -267,7 +269,7 @@
                 <label for="density-coeff" class="font-bold"
                     >Traffic density</label
                 >
-                <div class="flex flex-row justify-between">
+                <div class="flex flex-row justify-stretch w-full">
                     <input
                         type="range"
                         name="density-coeff"
@@ -299,7 +301,7 @@
 
                 <hr />
                 <label for="vel-coeff" class="font-bold">Average speed</label>
-                <div class="flex flex-row  justify-between">
+                <div class="flex flex-row justify-stretch w-full">
                     <input
                         type="range"
                         name="vel-coeff"
@@ -333,7 +335,7 @@
         bind:this={canvas}
         width="640"
         height="480"
-        class="w-full h-auto lg:w-max border-black border-2 rounded-sm m-2"
+        class="w-full h-auto lg:w-max border-black border-2 rounded-sm m-1"
     />
 </main>
 
@@ -356,7 +358,7 @@
     }
 
     input[type="range"] {
-        @apply w-32;
+        @apply w-full;
     }
 
     #time-scaling,
