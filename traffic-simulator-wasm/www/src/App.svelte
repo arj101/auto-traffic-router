@@ -107,7 +107,7 @@
 
     <div class="relative m-0 p-0">
         <button
-            class="transition-all absolute left-1/2 top-2 -translate-x-1/2 rounded-xl bg-transparent border-2 border-fuchsia-300 font-black grid place-items-center hover:opacity-100 {showFileOpener
+            class="transition-all absolute left-1/2 top-2 -translate-x-1/2 rounded-full bg-transparent border-2 border-fuchsia-300 font-black grid place-items-center hover:opacity-100 {showFileOpener
                 ? 'opacity-80 p-2'
                 : 'opacity-50 px-8 py-0.5 m-0 border-opacity-0'}"
             on:click={() => {
@@ -115,7 +115,7 @@
             }}
         >
             <span
-                class="material-symbols-rounded grid place-items-center text-fuchsia-300 text-3xl {showFileOpener
+                class=" -translate-y-0.5 material-symbols-rounded grid place-items-center text-fuchsia-300 text-3xl {showFileOpener
                     ? 'rotate-180'
                     : ''}"
             >
