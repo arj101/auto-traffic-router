@@ -35,7 +35,9 @@
     }, 100);
 </script>
 
-<div class="flex flex-col justify-stretch align-stretch text-sm mb-10 lg:mb-2">
+<div
+    class=" top-0 left-0 w-full flex flex-col justify-stretch align-stretch mt-0 text-sm mb-10 lg:mb-2 p-0"
+>
     {#if showFileOpener}
         <div
             transition:fly={{ duration: 300, y: -100 }}
@@ -101,11 +103,11 @@
         </div>
     {/if}
 
-    <div class="relative">
+    <div class="relative m-0 p-0">
         <button
-            class="transition-all absolute left-1/2 top-2 -translate-x-1/2 rounded-xl bg-transparent border-2 border-fuchsia-300 font-black shadow-lg grid place-items-center hover:opacity-100 {showFileOpener
+            class="transition-all absolute left-1/2 top-2 -translate-x-1/2 rounded-xl bg-transparent border-2 border-fuchsia-300 font-black grid place-items-center hover:opacity-100 {showFileOpener
                 ? 'opacity-80 p-2'
-                : 'opacity-30 p-1'}"
+                : 'opacity-50 px-8 py-0.5 m-0 border-opacity-0'}"
             on:click={() => {
                 showFileOpener = !showFileOpener;
             }}
