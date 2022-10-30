@@ -19,6 +19,8 @@ export class Simulator {
     densityCoeff: number;
     velocityCoeff: number;
     timeScale: number;
+    vehiclesPerSpawn: number;
+    vehicleAlpha: number;
 
     constructor(canvas: HTMLCanvasElement, map = map4) {
         this.nameMap = new Map();
@@ -47,6 +49,7 @@ export class Simulator {
         this.densityCoeff = 0;
         this.velocityCoeff = 0;
         this.timeScale = 1;
+        this.vehiclesPerSpawn = 3;
 
         this.pixiApp.stage.addChild(this.mapGraphics);
 
@@ -54,10 +57,10 @@ export class Simulator {
             console.warn("Parsing map data failed.");
         }
         this.drawMap();
-        this.createCircleTexture();
+        this.createVehicleTexture();
 
         this.vehicleMap = new Map();
-        this.spritePool = new Array(50).fill(
+        this.spritePool = new Array(10).fill(
             PIXI.Sprite.from(this.vehicleTexture)
         );
 
@@ -66,7 +69,7 @@ export class Simulator {
         this.pixiApp.ticker.add(() => this.tick());
     }
 
-    reinstantiateWithMap(map) {
+    reinstantiateWithMap(map = map4) {
         this.stop();
 
         this.sim.free();
@@ -100,7 +103,8 @@ export class Simulator {
     }
 
     tick() {
-        if (Math.random() < this.spawnProbability) this.sim.spawn_vehicles(2);
+        if (Math.random() < this.spawnProbability)
+            this.sim.spawn_vehicles(this.vehiclesPerSpawn);
 
         this.sim.tick(
             10 * this.timeScale,
@@ -160,14 +164,24 @@ export class Simulator {
         }
     }
 
-    createCircleTexture() {
+    createVehicleTexture(alpha = 0.2) {
+        this.vehicleAlpha = alpha;
         const circle = new PIXI.Graphics();
-        circle.beginFill(0xffffff, 0.2);
+        circle.beginFill(0xffffff, alpha);
         circle.drawCircle(4, 4, 4);
         circle.endFill();
         this.vehicleTexture = this.pixiApp.renderer.generateTexture(circle, {
             resolution: window.devicePixelRatio,
         });
+    }
+
+    rebuildVehicleTexture(alpha = 0.2) {
+        for (const [_, sprite] of this.vehicleMap) {
+            this.pixiApp.stage.removeChild(sprite);
+        }
+        this.vehicleMap.clear();
+        this.createVehicleTexture(alpha);
+        this.spritePool.length = 0;
     }
 
     createMap(mapData) {

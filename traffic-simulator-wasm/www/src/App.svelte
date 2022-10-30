@@ -14,12 +14,14 @@
     let simSpeed = 1;
     let densityCoeff = 0;
     let velCoeff = 0;
+    let vehiclesPerSpawn = 3;
 
     let showFileOpener = true;
     let files;
     let mapData;
     let mapDataReadResult = "";
     let hadReadError = false;
+    let vehicleAlpha = 0.2;
 
     onMount(() => {
         simulator = new Simulator(canvas!);
@@ -203,13 +205,57 @@
                     name="time-scaling"
                     id="time-scaling"
                     min="0"
-                    max="4"
+                    max="5"
                     step="0.01"
                     bind:value={simSpeed}
                     on:input={() => {
                         if (simulator) simulator.timeScale = simSpeed;
                     }}
                 />
+
+                <hr />
+                <label for="vehicles-per-spawn" class="font-bold"
+                    >Max. vehicles per spawn [{vehiclesPerSpawn}]</label
+                >
+                <input
+                    type="range"
+                    name="vehicles-per-spawn"
+                    id="vehicles-per-spawn"
+                    min="0"
+                    max="10"
+                    step="1"
+                    bind:value={vehiclesPerSpawn}
+                    on:input={() => {
+                        if (simulator)
+                            simulator.vehiclesPerSpawn = vehiclesPerSpawn;
+                    }}
+                />
+                <hr />
+                <label for="vehicle-alpha" class="font-bold"
+                    >Vehicle alpha [{vehicleAlpha.toFixed(2)}]</label
+                >
+                <input
+                    type="range"
+                    name="vehicle-alpha"
+                    id="vehicle-alpha"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    bind:value={vehicleAlpha}
+                    on:input={() => {
+                        simulator.rebuildVehicleTexture(vehicleAlpha);
+                    }}
+                />
+                <hr />
+
+                <button
+                    class=" mx-0 text-sm border-red-500 text-red-500 font-black hover:bg-red-500 active:bg-opacity-100 active:text-white hover:bg-opacity-10 bg-transparent rounded-md border-2 px-5 py-2"
+                    on:click={() => {
+                        simulator.reinstantiateWithMap(mapData);
+                    }}
+                >
+                    Reset
+                </button>
             </div>
             <div
                 class="m-2 flex flex-col justify-around items-start text-white text-left p-5 border-2 rounded-sm border-fuchsia-200 w-full border-opacity-30"
@@ -296,15 +342,26 @@
         @apply accent-fuchsia-300;
     }
 
+    h1 {
+        @apply text-base;
+    }
+
+    label,
+    p {
+        @apply text-sm;
+    }
+
     input[type="number"] {
-        @apply ml-2;
+        @apply ml-2  text-sm;
     }
 
     input[type="range"] {
         @apply w-32;
     }
 
-    #time-scaling {
+    #time-scaling,
+    #vehicles-per-spawn,
+    #vehicle-alpha {
         @apply w-full;
     }
 
