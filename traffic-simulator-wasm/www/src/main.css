@@ -9,3 +9,7 @@
   'GRAD' 200,
   'opsz' 48
 }
+
+input, button {
+  -webkit-tap-highlight-color: transparent;
+}
