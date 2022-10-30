@@ -308,6 +308,7 @@ pub struct RoadMap {
     pub roads: FxHashMap<RoadId, Road>,
     pub intersections: FxHashMap<IntersectionId, Intersection>,
     best_route_cache: FxHashMap<(IntersectionId, IntersectionId), (f64, RoadId)>,
+    delta_cache_frame: u32,
 }
 
 impl RoadMap {
@@ -316,6 +317,7 @@ impl RoadMap {
             roads: FxHashMap::default(),
             intersections: FxHashMap::default(),
             best_route_cache: FxHashMap::default(),
+            delta_cache_frame: 0,
         }
     }
 
@@ -325,11 +327,16 @@ impl RoadMap {
         vehicles: &FxHashMap<VehicleId, Vehicle>,
         density_coeff: f64,
         vel_coeff: f64,
+        cache_expiry_delta_frame: u32,
     ) {
+        self.delta_cache_frame += 1;
         for (_, road) in &mut self.roads {
             road.update(vehicles, density_coeff, vel_coeff)
         }
-        self.best_route_cache.clear()
+        if self.delta_cache_frame >= cache_expiry_delta_frame {
+            self.best_route_cache.clear();
+            self.delta_cache_frame = 0;
+        }
     }
 
     pub fn create_intersection(&mut self, id: IntersectionId, pos: (u32, u32)) {

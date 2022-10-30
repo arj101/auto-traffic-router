@@ -334,7 +334,12 @@ impl Simulator {
             self.stats.update_last_flow_frame()
         }
         self.vehicle_remove_list.clear();
-        self.map.update(&self.vehicles, density_coeff, vel_coeff);
+        self.map.update(
+            &self.vehicles,
+            density_coeff,
+            vel_coeff,
+            1500 / scale as u32,
+        );
     }
 
     pub fn create_intersection(&mut self, id: u32, x: u32, y: u32, weight: Option<f64>) {
