@@ -120,29 +120,22 @@ impl Lane {
     }
 
     pub fn update_vehicle(&mut self, vid: &VehicleId, pos: f64) -> VehicleUpdate {
-        if !self.vehicles.contains(&vid) {
+        if !self.vehicles.contains(vid) {
             panic!("Attempt to update a vehicle not on lane.")
         }
 
         if self.dir * (self.end_pos - pos) > 0.0 {
             self.lane_buff.push((*vid, pos));
             let infront = self.infront_map.get(vid);
-            let infront_id = if let Some(infront) = infront {
-                Some(infront.0)
-            } else {
-                None
-            };
-            let infront_pos = if let Some(infront) = infront {
-                Some(infront.1)
-            } else {
-                None
-            };
+
+            let infront_id = infront.map(|infront| infront.0);
+            let infront_pos = infront.map(|infront| infront.1);
             VehicleUpdate::UpdateRespone {
                 infront_id,
                 infront_pos,
             }
         } else {
-            self.vehicles.remove(&vid);
+            self.vehicles.remove(vid);
             VehicleUpdate::ExitResponse {
                 intersection_id: IntersectionId(if self.dir > 0.0 {
                     self.id.0 .1
@@ -159,7 +152,7 @@ impl Lane {
         density_coeff: f64,
         vel_coeff: f64,
     ) {
-        let dir = self.dir.clone();
+        let dir = self.dir;
         self.lane_buff
             .sort_unstable_by(|(_, a), (_, b)| (dir * a).partial_cmp(&(dir * b)).unwrap());
         self.lane = self.lane_buff.clone();
@@ -311,6 +304,12 @@ pub struct RoadMap {
     delta_cache_frame: u32,
 }
 
+impl Default for RoadMap {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl RoadMap {
     pub fn new() -> Self {
         Self {
@@ -330,7 +329,7 @@ impl RoadMap {
         cache_expiry_delta_frame: u32,
     ) {
         self.delta_cache_frame += 1;
-        for (_, road) in &mut self.roads {
+        for road in self.roads.values_mut() {
             road.update(vehicles, density_coeff, vel_coeff)
         }
         if self.delta_cache_frame >= cache_expiry_delta_frame {
@@ -401,7 +400,7 @@ impl RoadMap {
         let mut lowest_cost = f64::INFINITY;
         let mut best_road = None;
         for road_id in &node1.roads {
-            if curr_road == Some(road_id) || visited.contains(&road_id) {
+            if curr_road == Some(road_id) || visited.contains(road_id) {
                 continue;
             }
             let road = self.roads.get(road_id).unwrap();
@@ -459,11 +458,7 @@ impl RoadMap {
     // }
 
     pub fn road_length(&self, road_id: &RoadId) -> Option<f64> {
-        if let Some(road) = self.roads.get(road_id) {
-            Some(road.length)
-        } else {
-            None
-        }
+        self.roads.get(road_id).map(|road| road.length)
     }
 
     pub fn set_cost(&mut self, road_id: &RoadId, fwd: Option<f64>, bck: Option<f64>) {

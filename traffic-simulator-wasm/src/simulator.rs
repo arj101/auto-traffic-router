@@ -1,8 +1,5 @@
-use std::{collections::VecDeque, time::Instant};
-
+use rand::seq::SliceRandom;
 use rustc_hash::FxHashMap;
-
-use rand::seq::{IteratorRandom, SliceRandom};
 use wasm_bindgen::prelude::*;
 
 use crate::map::*;
@@ -136,27 +133,24 @@ impl Vehicle {
     }
 
     pub fn enter_road(&mut self, map: &mut RoadMap, int_id: &IntersectionId, road_id: &RoadId) {
-        match map
+        if let VehicleUpdate::EntryResponse {
+            infront_id,
+            dir,
+            infront_pos,
+            pos,
+            ..
+        } = map
             .roads
             .get_mut(road_id)
             .unwrap()
             .enter_from(*int_id, self.id)
         {
-            VehicleUpdate::EntryResponse {
-                infront_id,
-                dir,
-                infront_pos,
-                pos,
-                ..
-            } => {
-                self.infront_id = infront_id;
-                self.infront_pos = infront_pos;
-                self.curr_lane = Some(LaneId(*road_id, if dir > 0.0 { 0 } else { 1 }));
-                self.dir = dir;
-                self.pos = pos;
-                self.vel = self.max_vel;
-            }
-            _ => {}
+            self.infront_id = infront_id;
+            self.infront_pos = infront_pos;
+            self.curr_lane = Some(LaneId(*road_id, if dir > 0.0 { 0 } else { 1 }));
+            self.dir = dir;
+            self.pos = pos;
+            self.vel = self.max_vel;
         }
     }
 }
@@ -183,6 +177,12 @@ pub struct StatsManager {
 
     last_flow_frame: usize,
     frame_count: usize,
+}
+
+impl Default for StatsManager {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl StatsManager {
@@ -250,6 +250,12 @@ pub struct Simulator {
     vehicle_remove_list: Vec<VehicleId>,
 }
 
+impl Default for Simulator {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[wasm_bindgen]
 impl Simulator {
     pub fn new() -> Self {
@@ -272,7 +278,7 @@ impl Simulator {
             .map
             .intersections
             .keys()
-            .map(|id| *id)
+            .copied()
             .collect::<Vec<IntersectionId>>();
         for _ in 0..n {
             let mut nodes = nodes
@@ -281,8 +287,8 @@ impl Simulator {
                 })
                 .unwrap();
 
-            let start_node = nodes.next().expect("start node").clone();
-            let target_node = nodes.next().expect("target node").clone();
+            let start_node = *nodes.next().expect("start node");
+            let target_node = *nodes.next().expect("target node");
 
             // let start_node = IntersectionId(1);
             // let target_node = IntersectionId(2);
@@ -304,7 +310,7 @@ impl Simulator {
         let dt = 0.001 * scale;
         self.vehicle_render_buff.clear();
         self.stats.tick();
-        for (_, vehicle) in &mut self.vehicles {
+        for vehicle in self.vehicles.values_mut() {
             //(fixed dt per frame)
             if let VehicleState::Completed = vehicle.update(&mut self.map, dt as f64) {
                 self.vehicle_remove_list.push(vehicle.id);
@@ -326,11 +332,11 @@ impl Simulator {
             self.vehicle_render_buff.push(y as f32);
         }
         for id in &self.vehicle_remove_list {
-            if let Some(v) = self.vehicles.remove(&id) {
+            if let Some(v) = self.vehicles.remove(id) {
                 self.stats.update_from_vehicle(v)
             }
         }
-        if self.vehicle_remove_list.len() > 0 {
+        if !self.vehicle_remove_list.is_empty() {
             self.stats.update_last_flow_frame()
         }
         self.vehicle_remove_list.clear();
