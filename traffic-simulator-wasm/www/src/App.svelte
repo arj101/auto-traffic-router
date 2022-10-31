@@ -112,19 +112,26 @@
         </div>
     {/if}
 
-    <div class="relative m-0 p-0 z-20">
+    <div class="relative m-0 p-0 z-20 w-full h-fit top-0">
         <button
-            class="transition-all absolute left-1/2 top-2 -translate-x-1/2 rounded-full bg-transparent border-2 border-fuchsia-300 font-black grid place-items-center hover:opacity-100 {showFileOpener
-                ? 'opacity-80 p-2'
-                : 'opacity-50 px-8 py-0.5 m-0 border-opacity-0'}"
+            title="{showFileOpener
+                ? 'Closes'
+                : 'Opens'} menu to upload custom map file."
+            class="transition-all absolute left-1/2 
+                 -translate-x-1/2 rounded-full bg-transparent border-2 border-fuchsia-300 font-black grid place-items-center hover:opacity-100 {showFileOpener
+                ? 'opacity-80 p-2 top-2'
+                : 'opacity-50 px-8 py-0.5 m-0 border-opacity-0 top-0'}"
             on:click={() => {
                 showFileOpener = !showFileOpener;
             }}
         >
             <span
+                title="{showFileOpener
+                    ? 'Closes'
+                    : 'Opens'} menu to upload custom map file."
                 class=" -translate-y-0.5 material-symbols-rounded grid place-items-center text-fuchsia-300 text-3xl {showFileOpener
                     ? 'rotate-180'
-                    : ''}"
+                    : ' -translate-y-2'}"
             >
                 expand_more
             </span>
@@ -133,7 +140,7 @@
 </div>
 
 <main
-    class="z-0 transition-all min-w-screen min-h-screen bg-neutral-800 p-2 font-sans flex flex-col-reverse lg:flex-row justify-stretch items-stretch md:justify-around md:items-center"
+    class="z-0 transition-all min-w-screen min-h-screen bg-neutral-800 p-2 pt-6 font-sans flex flex-col-reverse lg:flex-row justify-stretch items-stretch md:justify-around md:items-center"
 >
     <div class="flex flex-col justify-around items-stretch m-4">
         <div
@@ -145,18 +152,33 @@
                 <h1 class="text-xl font-black">Stats</h1>
                 <hr />
 
-                <p class="text-md">
-                    Vehicle count: <span class="font-semibold text-fuchsia-300"
+                <p
+                    class="text-md"
+                    title="Number of vehicles that has reached their destination."
+                >
+                    Vehicle count: <span
+                        class="font-semibold text-fuchsia-300"
+                        title="Number of vehicles that has reached their destination."
                         >{stats_vehicle_count}</span
                     >
                 </p>
-                <p class="text-md">
-                    Flux: <span class="font-semibold text-fuchsia-300"
+                <p
+                    class="text-md"
+                    title="Number of vehicles reaching destination per unit time."
+                >
+                    Flux: <span
+                        class="font-semibold text-fuchsia-300"
+                        title="Number of vehicles reaching destination per unit time."
                         >{stats_flux.toFixed(5)}</span
                     >
                 </p>
-                <p class="text-md">
-                    Speed: <span class="font-semibold text-fuchsia-300"
+                <p
+                    class="text-md"
+                    title="Average speed of all vehicles that has reached their destination"
+                >
+                    Speed: <span
+                        class="font-semibold text-fuchsia-300"
+                        title="Average speed of all vehicles that has reached their destination"
                         >{stats_speed.toFixed(5)}</span
                     >
                 </p>
@@ -170,11 +192,15 @@
             >
                 <h1 class="text-xl font-black">Settings</h1>
                 <hr />
-                <label for="spawn-prob" class="font-bold"
+                <label
+                    for="spawn-prob"
+                    class="font-bold"
+                    title="Probability of spawning new vehicles each frame."
                     >Spawn probability</label
                 >
                 <div class="flex flex-row justify-stretch w-full">
                     <input
+                        title="Probability of spawning new vehicles each frame."
                         type="range"
                         name="spawn-prob"
                         id="spawn-prob"
@@ -189,6 +215,7 @@
                     />
 
                     <input
+                        title="Probability of spawning new vehicles each frame."
                         class="m-1 w-20 bg-transparent border-2 border-fuchsia-200 border-opacity-20 p-1 rounded-sm font-semibold text-fuchsia-300 outline-none"
                         type="number"
                         name="spawn-prob"
@@ -204,10 +231,14 @@
                     />
                 </div>
                 <hr />
-                <label for="time-scaling" class="font-bold"
+                <label
+                    for="time-scaling"
+                    class="font-bold"
+                    title="Scales the timestep by this number."
                     >Simulation speed [{simSpeed.toFixed(2)}x]</label
                 >
                 <input
+                    title="Scales the timestep by this number."
                     type="range"
                     name="time-scaling"
                     id="time-scaling"
@@ -225,6 +256,7 @@
                     >Max. vehicles per spawn [{vehiclesPerSpawn}]</label
                 >
                 <input
+                    title="Number of vehicles that are each time."
                     type="range"
                     name="vehicles-per-spawn"
                     id="vehicles-per-spawn"
@@ -238,10 +270,14 @@
                     }}
                 />
                 <hr />
-                <label for="vehicle-alpha" class="font-bold"
+                <label
+                    for="vehicle-alpha"
+                    class="font-bold"
+                    title="Transparency value of the vehicles (circles)"
                     >Vehicle alpha [{vehicleAlpha.toFixed(2)}]</label
                 >
                 <input
+                    title="Transparency value of the vehicles (circles)"
                     type="range"
                     name="vehicle-alpha"
                     id="vehicle-alpha"
@@ -256,6 +292,7 @@
                 <hr />
 
                 <button
+                    title="Clears all vehicles and creates a new instance of the underlying (WASM) traffic simulator"
                     class=" mx-0 text-sm border-red-500 text-red-500 font-black hover:bg-red-500 active:bg-opacity-100 active:text-white hover:bg-opacity-10 bg-transparent rounded-md border-2 px-5 py-2"
                     on:click={() => {
                         simulator.reinstantiateWithMap(mapData);
