@@ -84,7 +84,10 @@ impl Vehicle {
         self.vel += self.acc * (dv / 5.0).clamp(0.0, 1.0) * dt;
         self.vel = self.vel.clamp(0.0, self.max_vel);
 
-        if rand::random::<f64>() < 0.01 && self.vel >= self.max_vel / 5.0 {
+        let rand_num = rand::random::<f64>();
+        if rand_num < 0.0001 && self.vel >= self.max_vel / 5.0 {
+            self.vel = 0.0;
+        } else if rand_num < 0.001 && self.vel >= self.max_vel / 5.0 {
             self.vel /= 5.0;
         }
         // self.vel = self.dir * (pos - self.pos) / 20.0 * self.max_vel;
@@ -124,7 +127,11 @@ impl Vehicle {
                 self.infront_id = None;
                 self.infront_pos = None;
 
-                self.enter_road(map, &intersection_id, &road_id.unwrap())
+                if let Some(road_id) = road_id {
+                    self.enter_road(map, &intersection_id, &road_id);
+                } else {
+                    return VehicleState::Completed;
+                }
             }
             _ => {}
         }
@@ -150,7 +157,7 @@ impl Vehicle {
             self.curr_lane = Some(LaneId(*road_id, if dir > 0.0 { 0 } else { 1 }));
             self.dir = dir;
             self.pos = pos;
-            self.vel = self.max_vel;
+            self.vel = self.max_vel / (1.0 + rand::random::<f64>());
         }
     }
 }
@@ -344,7 +351,7 @@ impl Simulator {
             &self.vehicles,
             density_coeff,
             vel_coeff,
-            1500 / scale as u32,
+            (1500.0 / scale.clamp(0.01, 100.0)) as u32,
         );
     }
 
