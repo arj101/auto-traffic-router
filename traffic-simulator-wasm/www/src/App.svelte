@@ -16,7 +16,7 @@
     let velCoeff = 0;
     let vehiclesPerSpawn = 3;
 
-    let showFileOpener = true;
+    let showFileOpener = false;
     let files;
     let mapData;
     let mapDataReadResult = "";
@@ -38,18 +38,22 @@
 </script>
 
 <div
-    class=" top-0 left-0 w-full flex flex-col justify-stretch align-stretch mt-0 text-sm {showFileOpener
-        ? 'mb-14'
-        : 'mb-8'} lg:mb-2 p-0"
+    class="absolute top-0 left-0 w-full flex flex-col justify-stretch align-stretch mt-0 text-sm lg:mb-2 p-0"
 >
     {#if showFileOpener}
         <div
+            class="absolute top-0 left-0 h-screen w-screen bg-neutral-800 bg-opacity-30 z-1 z-10 backdrop-blur-sm"
+            on:click={() => (showFileOpener = false)}
+        />
+        <div
             transition:fly={{ duration: 300, y: -100 }}
-            class="color-white text-white accent-fuchsia-300 p-4 bg-fuchsia-300 bg-opacity-10 flex flex-row justify-start items-center"
+            class="z-20 transition-all color-white text-white accent-fuchsia-300 p-4 bg-fuchsia-300 bg-opacity-10 flex flex-row justify-start items-center {!showFileOpener
+                ? '-top-30 '
+                : ''}"
         >
             <label for="map-data" class="m-2 font-bold">Upload map file</label>
             <!-- svelte-ignore missing-declaration -->
-            <div class="flex flex-row justify-stretch items-stretch">
+            <div class="flex flex-row justify-stretch items-stretch ">
                 <input
                     class="cursor-pointer p-2 block placeholder-fuchsia-300 mr-0 bg-transparent text-white border-2 border-fuchsia-200 border-opacity-30 rounded-l-md hover:bg-fuchsia-300 hover:bg-opacity-30"
                     type="file"
@@ -76,6 +80,7 @@
                                     hadReadError = false;
                                     mapDataReadResult =
                                         "Successfully read map data";
+                                    showFileOpener = false;
                                 }
                             } else {
                                 hadReadError = true;
@@ -107,7 +112,7 @@
         </div>
     {/if}
 
-    <div class="relative m-0 p-0">
+    <div class="relative m-0 p-0 z-20">
         <button
             class="transition-all absolute left-1/2 top-2 -translate-x-1/2 rounded-full bg-transparent border-2 border-fuchsia-300 font-black grid place-items-center hover:opacity-100 {showFileOpener
                 ? 'opacity-80 p-2'
@@ -128,7 +133,7 @@
 </div>
 
 <main
-    class="transition-all min-w-screen min-h-screen bg-neutral-800 p-2 font-sans flex flex-col-reverse lg:flex-row justify-stretch items-stretch md:justify-around md:items-center"
+    class="z-0 transition-all min-w-screen min-h-screen bg-neutral-800 p-2 font-sans flex flex-col-reverse lg:flex-row justify-stretch items-stretch md:justify-around md:items-center"
 >
     <div class="flex flex-col justify-around items-stretch m-4">
         <div
@@ -358,12 +363,6 @@
     }
 
     input[type="range"] {
-        @apply w-full;
-    }
-
-    #time-scaling,
-    #vehicles-per-spawn,
-    #vehicle-alpha {
         @apply w-full;
     }
 
