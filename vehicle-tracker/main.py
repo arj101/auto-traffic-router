@@ -18,6 +18,12 @@ lower_h = 0
 lower_s = 70
 lower_v = 50
 
+blur_kernel_size = 11
+close_kernel_size = 5
+open_kernel_size = 5
+erode_kernel_size = 5
+dilate_kernel_size = 5
+
 
 def constrain(val, l, u):
     if val > u:
@@ -38,7 +44,9 @@ kernel = np.array([
     [1, 2, 3, 2, 1],
 ], dtype=np.uint8)
 
-cam = cv2.VideoCapture(-1)
+cam = cv2.VideoCapture(1)
+if cam == None:
+	cam = cv2.VideoCapture(-1)
 
 if not cam.isOpened():
     print('cannot open camera')
@@ -50,10 +58,20 @@ def nothing(x):
 
 
 cv2.namedWindow('tracker')
+cv2.namedWindow('preprocessing settings')
+cv2.namedWindow('threshold settings')
+
 cv2.createTrackbar('sat lower', 'tracker', 182, 255, nothing)
 cv2.createTrackbar('val lower', 'tracker', 100, 255, nothing)
 cv2.createTrackbar('sat upper', 'tracker', 255, 255, nothing)
 cv2.createTrackbar('val upper', 'tracker', 255, 255, nothing)
+
+cv2.createTrackbar('blur', 'preprocessing settings', 11, 21, nothing)
+cv2.createTrackbar('open', 'preprocessing settings', 5, 20, nothing)
+cv2.createTrackbar('close', 'preprocessing settings', 5, 20, nothing)
+
+cv2.createTrackbar('dilate', 'threshold settings', 1, 20, nothing)
+cv2.createTrackbar('erode', 'threshold settings', 1, 20, nothing)
 
 # tracker = object_tracker.ObjectTracker(10, 0.05)
 data = {}
@@ -67,11 +85,21 @@ while True:
     if not ret:
         print('error reading frame')
         continue
-
-    blurred = cv2.GaussianBlur(frame, (7, 7), 0)
-    opened = cv2.morphologyEx(blurred, cv2.MORPH_CLOSE, kernel)
-    hsv = cv2.cvtColor(opened, cv2.COLOR_BGR2HSV)
-
+    
+    blur_kernel_size = cv2.getTrackbarPos('blur', 'preprocessing settings')
+    if blur_kernel_size % 2 == 0:
+        blur_kernel_size += 1
+    open_kernel_size = cv2.getTrackbarPos('open', 'preprocessing settings')
+    close_kernel_size = cv2.getTrackbarPos('close', 'preprocessing settings')
+    erode_kernel_size = cv2.getTrackbarPos('erode', 'threshold settings')
+    dilate_kernel_size = cv2.getTrackbarPos('dilate', 'threshold settings')
+    
+    blurred = cv2.GaussianBlur(frame, (blur_kernel_size, blur_kernel_size), 0)
+    #opened = cv2.morphologyEx(blurred, cv2.MORPH_CLOSE, kernel)
+    opened = cv2.morphologyEx(blurred, cv2.MORPH_OPEN, np.ones((open_kernel_size, open_kernel_size), np.uint8))
+    closed = cv2.morphologyEx(opened, cv2.MORPH_CLOSE, np.ones((close_kernel_size, close_kernel_size), np.uint8))
+    cv2.imshow('preprocessing settings', closed)
+    hsv = cv2.cvtColor(closed, cv2.COLOR_BGR2HSV)
     lower_s = cv2.getTrackbarPos('sat lower', 'tracker')
     lower_v = cv2.getTrackbarPos('val lower', 'tracker')
     upper_s = cv2.getTrackbarPos('sat upper', 'tracker')
@@ -83,8 +111,12 @@ while True:
         [170, lower_s, lower_v]), np.array([180, upper_s, upper_v]))
 
     thresh = mask1 | mask2
+    
+    dilated = cv2.dilate(thresh, np.ones((dilate_kernel_size, dilate_kernel_size), np.uint8))
+    eroded = cv2.erode(dilated, np.ones((erode_kernel_size, erode_kernel_size), np.uint8))
+    thresh = eroded
 
-    cv2.imshow('Color detection', thresh)
+    cv2.imshow('threshold settings', thresh)
 
     contours, _ = cv2.findContours(
         thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -95,7 +127,7 @@ while True:
 
         if (area > 20 and area < 500):
             approx = cv2.approxPolyDP(
-                cnt, 0.1 * cv2.arcLength(cnt, True), True)
+                cnt, 0.05 * cv2.arcLength(cnt, True), True)
             if len(approx) == 4:
                 color = (255, 255, 0)
                 rect = cv2.minAreaRect(cnt)
@@ -144,7 +176,7 @@ while True:
                         (cx, cy), time.monotonic(), nearest_vel, nearest_angle)
 
                 # cv2.drawContours(img, [box], 0, color, 3)
-            # cv2.drawContours(img, [approx], 0, (255,0,255), 1)
+            cv2.drawContours(img, [approx], 0, (255,0,255), 1)
     # for ((x, y), _) in tracker.get_data().values():
     #     cv2.circle(img, (int(x), int(y)), 2, (255, 255, 0), 4)
 

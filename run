@@ -1,0 +1,5 @@
+#!/bin/sh
+
+export PORT=/dev/ttyACM0
+cd rerouter
+cargo run --release ../vehicle-tracker/main.py
