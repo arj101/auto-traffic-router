@@ -254,6 +254,28 @@ impl Road {
         }
     }
 
+    pub fn dist_infront_from(&self, n: &IntersectionId) -> f64 {
+        if n.0 == self.id.0 {
+            if self.fwd_lane.lane.is_empty() {
+                return self.length;
+            }
+            self.fwd_lane
+                .lane
+                .get(self.fwd_lane.lane.len() - 1)
+                .unwrap()
+                .1
+        } else {
+            if self.bck_lane.lane.is_empty() {
+                return self.length;
+            }
+            self.bck_lane
+                .lane
+                .get(self.bck_lane.lane.len() - 1)
+                .unwrap()
+                .1
+        }
+    }
+
     pub fn set_cost(&mut self, cost_forward: Option<f64>, cost_backward: Option<f64>) {
         if let Some(cost) = cost_forward {
             self.cost_dynamic.0 = cost

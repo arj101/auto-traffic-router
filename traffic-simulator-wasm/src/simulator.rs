@@ -297,6 +297,22 @@ impl Simulator {
             let start_node = *nodes.next().expect("start node");
             let target_node = *nodes.next().expect("target node");
 
+            let (_, road) = self.map.best_direction(start_node, target_node, None);
+            if let Some(road) = road {
+                if self
+                    .map
+                    .roads
+                    .get(&road)
+                    .unwrap()
+                    .dist_infront_from(&start_node)
+                    <= 5.0
+                {
+                    continue;
+                }
+            } else {
+                continue;
+            }
+
             // let start_node = IntersectionId(1);
             // let target_node = IntersectionId(2);
 
