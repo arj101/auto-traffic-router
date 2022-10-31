@@ -42,7 +42,7 @@
 >
     {#if showFileOpener}
         <div
-            class="absolute top-0 left-0 h-screen w-screen bg-neutral-800 bg-opacity-30 z-1 z-10 backdrop-blur-sm"
+            class="fixed top-0 left-0 h-screen w-screen bg-neutral-800 bg-opacity-30 z-1 z-10 backdrop-blur-sm"
             on:click={() => (showFileOpener = false)}
         />
         <div
