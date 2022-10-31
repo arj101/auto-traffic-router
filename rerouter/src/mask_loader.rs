@@ -11,12 +11,14 @@ pub fn load_road_masks() -> HashMap<LaneId, ImageBuffer<LumaA<u8>, Vec<u8>>> {
     let mut masks = HashMap::new();
 
     for entry in fs::read_dir("../road-masks").expect("Failed to open road mask directory") {
-        if let Err(_) = entry {
+        if entry.is_err() {
             continue;
         }
+
         let entry = entry.unwrap();
         let filetype = entry.file_type();
-        if let Err(_) = filetype {
+
+        if filetype.is_err() {
             continue;
         }
         if !filetype.unwrap().is_file() {
@@ -24,9 +26,11 @@ pub fn load_road_masks() -> HashMap<LaneId, ImageBuffer<LumaA<u8>, Vec<u8>>> {
         }
 
         let name = entry.file_name().into_string();
-        if let Err(e) = name {
+
+        if name.is_err() {
             continue;
         }
+
         let name = name.unwrap();
         let parts = name.split('.').collect::<Vec<&str>>();
         if parts.len() != 2 {
@@ -47,12 +51,12 @@ pub fn load_road_masks() -> HashMap<LaneId, ImageBuffer<LumaA<u8>, Vec<u8>>> {
             continue;
         };
 
-        println!("{:?}", entry.path());
         let lane_id = if *parts.get(2).unwrap() == "l" { 0 } else { 1 };
         let image = image::open(entry.path()).unwrap();
         let image = image.grayscale();
         let image = image.as_luma_alpha8().unwrap();
         masks.insert(LaneId(RoadId(int1id, int2id), lane_id), image.clone());
+        println!("Loaded {:?}", entry.path());
     }
 
     masks

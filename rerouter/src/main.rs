@@ -16,11 +16,13 @@ use sdl2::sys::{KeyCode, Window};
 use map::{IntersectionId, LaneId, RoadId, RoadMap};
 
 use light_controller::{Led, LightController};
-use mask_loader::load_road_masks;
 use vehicle_tracker::Tracker;
 
+use std::io::Error;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
-use std::time::Instant;
+use std::thread;
+use std::time::{Duration, Instant};
 use std::{io::BufRead, io::BufReader, num::ParseFloatError, process};
 
 #[derive(Debug)]
@@ -32,16 +34,21 @@ pub struct RxData {
 }
 
 #[derive(Debug)]
-
 struct RxDatas(Vec<RxData>);
 
 fn main() {
     // load_road_masks();
     // controller.set_led(Led::E_RD_1_4, true);
 
+    let is_running = Arc::new(AtomicBool::new(true));
+
+    let is_running_detector = Arc::clone(&is_running);
+    let is_running_controller = Arc::clone(&is_running);
+
     let (tx, rx) = std::sync::mpsc::channel();
 
     let detector_thread = std::thread::spawn(move || {
+        let is_running = is_running_detector;
         let args = std::env::args().collect::<Vec<String>>();
         let detector_path = args.get(1).unwrap().clone();
         let mut detector = process::Command::new(format!("python3"))
@@ -55,9 +62,13 @@ fn main() {
         let stdout_lines = stdout_reader.lines();
 
         for line in stdout_lines {
-            if let Err(_) = line {
+            if !is_running.load(Ordering::Relaxed) {
+                return;
+            }
+            if line.is_err() {
                 continue;
-            };
+            }
+
             let s = line.unwrap();
             let s = s.trim();
             let mut datas = vec![];
@@ -84,7 +95,7 @@ fn main() {
                 };
                 datas.push(rx_data);
             }
-            tx.send(RxDatas(datas));
+            let _ = tx.send(RxDatas(datas));
         }
     });
 
@@ -93,10 +104,21 @@ fn main() {
 
     let map_clone = Arc::clone(&map);
     let controller_thread = std::thread::spawn(move || {
-        let mut controller = LightController::create_and_init(
-            &std::env::var("PORT").expect("Serial port name"),
-            115200,
-        );
+        let is_running = is_running_controller;
+        let port = &std::env::var("PORT").expect("Serial port name");
+        let mut controller = LightController::create_and_init(port, 115200);
+
+        while controller.is_err() {
+            if !is_running.load(Ordering::Relaxed) {
+                return;
+            }
+            println!("Initialising light controller failed");
+            println!("Retrying in 400ms");
+            thread::sleep(Duration::from_millis(400));
+            controller = LightController::create_and_init(port, 115200);
+        }
+
+        let mut controller = controller.unwrap();
 
         let map = map_clone;
         let route_indicators = presets::create_route_indicators();
@@ -121,7 +143,7 @@ fn main() {
             }
 
             controller.clear();
-            delay(100);
+            delay(90);
 
             for led in &led_state_buffer {
                 controller.set_led(**led, true)
@@ -132,6 +154,9 @@ fn main() {
         update();
 
         loop {
+            if !is_running.load(Ordering::Relaxed) {
+                return;
+            }
             if last_update.elapsed().as_millis() < 300 {
                 continue;
             }
@@ -161,7 +186,7 @@ fn main() {
         .expect("ttf context ( some font thing )");
 
     let mut canvas = window.into_canvas().build().unwrap();
-    let mut font = ttf_context
+    let font = ttf_context
         .load_font("../fonts/FiraCode-Medium.ttf", 14)
         .expect("font");
     let texture_creator = canvas.texture_creator();
@@ -257,7 +282,7 @@ fn main() {
                     map.set_cost(road_id, None, Some(cost));
                 }
 
-                if (visited.contains(road_id)) {
+                if visited.contains(road_id) {
                     continue;
                 }
 
@@ -301,7 +326,7 @@ fn main() {
             text_rect.height() + 10,
         );
         let _ = canvas.copy(&texture, None, Some(text_rect));
-        canvas.draw_rect(vel_rect);
+        let _ = canvas.draw_rect(vel_rect);
 
         let srf = font
             .render(&format!("Density coeff: {}", density_coeff))
@@ -319,7 +344,7 @@ fn main() {
             text_rect.height() + 10,
         );
         let _ = canvas.copy(&texture, None, Some(text_rect));
-        canvas.draw_rect(density_rect);
+        let _ = canvas.draw_rect(density_rect);
 
         let mouse_state = event_pump.mouse_state();
         for event in event_pump.poll_iter() {
@@ -328,7 +353,10 @@ fn main() {
                 | Event::KeyDown {
                     keycode: Some(Keycode::Escape),
                     ..
-                } => break 'running,
+                } => {
+                    is_running.store(false, Ordering::Relaxed);
+                    break 'running;
+                }
 
                 Event::MouseWheel { y, .. } => {
                     if vel_rect.contains_point((mouse_state.x(), mouse_state.y())) {
@@ -346,10 +374,13 @@ fn main() {
         tracker.update();
     }
 
-    detector_thread.join().expect("join detector thread");
-    controller_thread
-        .join()
-        .expect("join light controller thread");
+    if let Err(e) = controller_thread.join() {
+        println!("Couldn't join controller thread: {:?}", e);
+    }
+
+    if let Err(e) = detector_thread.join() {
+        println!("Couldn't join detector thread: {:?}", e);
+    }
 }
 
 fn delay(duration_ms: u64) {

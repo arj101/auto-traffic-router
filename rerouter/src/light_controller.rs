@@ -1,5 +1,6 @@
 use serial2::SerialPort;
 use std::collections::HashMap;
+use std::fmt::Error;
 use std::hash::Hash;
 use std::io::Write;
 use std::time::Duration;
@@ -142,8 +143,13 @@ pub struct LightController {
 }
 
 impl LightController {
-    pub fn create_and_init(port_name: &str, baudrate: u32) -> Self {
-        let mut port = SerialPort::open(port_name, baudrate).expect("Failed to open serial port");
+    pub fn create_and_init(port_name: &str, baudrate: u32) -> Result<Self, std::io::Error> {
+        let port = SerialPort::open(port_name, baudrate);
+        if let Err(e) = port {
+            println!("[LightController] {}", e);
+            return Err(e);
+        }
+        let mut port = port.unwrap();
         port.set_read_timeout(Duration::from_millis(300)).unwrap();
         port.set_write_timeout(Duration::from_millis(300)).unwrap();
         let mut buffer = [0; 256];
@@ -171,7 +177,7 @@ impl LightController {
         };
         crate::delay(2);
         controller.clear_all();
-        controller
+        Ok(controller)
     }
 
     fn clear_all(&mut self) {
