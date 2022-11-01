@@ -191,7 +191,7 @@ impl Lane {
             0.0
         };
 
-        let inv_velocity_term = density_term * vel_coeff / (10e-2 + avg_vel);
+        let inv_velocity_term = density_term * vel_coeff / (10e-6 + avg_vel);
         let inv_velocity_term = if avg_vel > 0.0 {
             inv_velocity_term
         } else {

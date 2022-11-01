@@ -44,11 +44,11 @@ impl Vehicle {
         let mut vehicle = Self {
             id,
             curr_lane: None,
-            max_vel: 50.0 + rand::random::<f64>() * 100.0,
+            max_vel: 20.0 + rand::random::<f64>() * 130.0,
             dir: 0.0,
             vel: 0.0,
             pos: 0.0,
-            acc: 20.0 + rand::random::<f64>() * 40.0,
+            acc: 5.0 + rand::random::<f64>() * 45.0,
             infront_id: None,
             infront_pos: None,
 
