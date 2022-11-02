@@ -73,5 +73,8 @@ export class StatsManager {
   flux_avg_clear_threshold: number;
 /**
 */
+  vehicle_on_road: number;
+/**
+*/
   vel_avg_clear_threshold: number;
 }

@@ -72,12 +72,28 @@ impl Vehicle {
         }
         self.frame_count += 1;
 
+        let dist_to_end = {
+            let LaneId(road_id, lane_id) = self.curr_lane.unwrap();
+            let road_len = map.road_length(&road_id).unwrap();
+
+            if lane_id == 0 {
+                road_len - self.pos
+            } else {
+                self.pos
+            }
+        };
+
         let mut desired_vel = self.max_vel;
 
         if let Some(pos) = self.infront_pos {
             // desired_vel = self.dir * (pos - self.pos) / 10.0 * self.max_vel;
             desired_vel = self.dir * (pos - self.pos) / 12.0 * self.max_vel;
         }
+
+        if dist_to_end <= 30.0 {
+            desired_vel *= 0.5 + 0.5 * dist_to_end / 30.0;
+        }
+
         let dv = desired_vel - self.vel;
 
         // let multiplier = if dv > 0.0 { 1.0 } else { 50.0 };
@@ -179,6 +195,8 @@ pub struct StatsManager {
 
     pub avg_vel: f64,
     pub vel_avg_clear_threshold: f64,
+
+    pub vehicle_on_road: usize,
     vel_sum: f64,
     vel_n: f64,
 
@@ -207,6 +225,8 @@ impl StatsManager {
             vel_sum: 0.0,
             vel_n: 0.0,
             vel_avg_clear_threshold: 10000.0,
+
+            vehicle_on_road: 0,
         }
     }
 
@@ -215,8 +235,9 @@ impl StatsManager {
         self.frame_count += 1;
     }
 
-    pub fn update_last_flow_frame(&mut self) {
+    pub fn update_frame(&mut self, vehicles: &FxHashMap<VehicleId, Vehicle>) {
         self.last_flow_frame = self.frame_count;
+        self.vehicle_on_road = vehicles.len();
     }
 
     pub fn update_from_vehicle(&mut self, vehicle: Vehicle) {
@@ -360,7 +381,7 @@ impl Simulator {
             }
         }
         if !self.vehicle_remove_list.is_empty() {
-            self.stats.update_last_flow_frame()
+            self.stats.update_frame(&self.vehicles);
         }
         self.vehicle_remove_list.clear();
         self.map.update(

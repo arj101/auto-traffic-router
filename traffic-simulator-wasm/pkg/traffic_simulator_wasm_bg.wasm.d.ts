@@ -12,6 +12,8 @@ export function __wbg_get_statsmanager_avg_vel(a: number): number;
 export function __wbg_set_statsmanager_avg_vel(a: number, b: number): void;
 export function __wbg_get_statsmanager_vel_avg_clear_threshold(a: number): number;
 export function __wbg_set_statsmanager_vel_avg_clear_threshold(a: number, b: number): void;
+export function __wbg_get_statsmanager_vehicle_on_road(a: number): number;
+export function __wbg_set_statsmanager_vehicle_on_road(a: number, b: number): void;
 export function __wbg_simulator_free(a: number): void;
 export function __wbg_get_simulator_stats(a: number): number;
 export function __wbg_set_simulator_stats(a: number, b: number): void;

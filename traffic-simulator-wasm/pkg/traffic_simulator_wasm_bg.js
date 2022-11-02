@@ -333,6 +333,19 @@ export class StatsManager {
     set vel_avg_clear_threshold(arg0) {
         wasm.__wbg_set_statsmanager_vel_avg_clear_threshold(this.ptr, arg0);
     }
+    /**
+    * @returns {number}
+    */
+    get vehicle_on_road() {
+        const ret = wasm.__wbg_get_statsmanager_vehicle_on_road(this.ptr);
+        return ret >>> 0;
+    }
+    /**
+    * @param {number} arg0
+    */
+    set vehicle_on_road(arg0) {
+        wasm.__wbg_set_statsmanager_vehicle_on_road(this.ptr, arg0);
+    }
 }
 
 export function __wbg_new_abda76e883ba8a5f() {
