@@ -41,20 +41,6 @@
 </script>
 
 <div
-    class="text-xs lg:text-sm font-sans fixed bottom left-0 bottom-0 w-full z-0 flex flex-row justify-around items-center bg-black"
->
-    <h5 class="py-1.5 px-3 text-white">
-        Part of <span class="font-black">{itemCode}</span>, 2022 Kerala School
-        Science Fair
-    </h5>
-    <a
-        class="py-1.5 px-3 text-fuchsia-300 underline hover:text-blue-500"
-        href="https://github.com/arj101/auto-traffic-router/tree/main/traffic-simulator-wasm"
-        >View source code</a
-    >
-</div>
-
-<div
     class="absolute top-0 left-0 w-full flex flex-col justify-stretch align-stretch mt-0 text-sm lg:mb-2 p-0"
 >
     {#if showFileOpener}
